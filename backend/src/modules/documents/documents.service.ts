@@ -5,7 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as pdfParse from 'pdf-parse';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>;
 import * as mammoth from 'mammoth';
 import { Document, DocumentStatus } from '../../database/entities/document.entity';
 import { DocumentChunk } from '../../database/entities/document-chunk.entity';

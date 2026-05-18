@@ -31,7 +31,7 @@ export default function AuthCallbackPage() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <CircularProgress />
-      <Typography mt={2} color="text.secondary">Signing you in…</Typography>
+      <Typography sx={{ mt: 2 }} color="text.secondary">Signing you in…</Typography>
     </Box>
   );
 }

@@ -7,11 +7,11 @@ import { ConfigService } from '@nestjs/config';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(config: ConfigService) {
     super({
-      clientID: config.get<string>('GOOGLE_CLIENT_ID'),
-      clientSecret: config.get<string>('GOOGLE_CLIENT_SECRET'),
-      callbackURL: config.get<string>('GOOGLE_CALLBACK_URL'),
+      clientID: config.get<string>('GOOGLE_CLIENT_ID') as string,
+      clientSecret: config.get<string>('GOOGLE_CLIENT_SECRET') as string,
+      callbackURL: config.get<string>('GOOGLE_CALLBACK_URL') as string,
       scope: ['email', 'profile'],
-    });
+    } as any);
   }
 
   async validate(

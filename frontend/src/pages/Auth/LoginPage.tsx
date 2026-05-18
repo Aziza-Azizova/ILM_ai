@@ -42,10 +42,10 @@ export default function LoginPage() {
       }}
     >
       <Paper sx={{ p: 4, width: '100%', maxWidth: 420 }}>
-        <Typography variant="h5" fontWeight={700} mb={1}>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
           Welcome back to Ilm AI
         </Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Your personal learning companion
         </Typography>
 
@@ -79,7 +79,7 @@ export default function LoginPage() {
           Continue with Google
         </Button>
 
-        <Typography variant="body2" textAlign="center" mt={3}>
+        <Typography variant="body2" sx={{ textAlign: 'center', mt: 3 }}>
           No account?{' '}
           <Link to="/register" style={{ color: 'inherit', fontWeight: 600 }}>
             Sign up free
