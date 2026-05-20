@@ -5,10 +5,12 @@ import {
   DialogActions, TextField, Skeleton, Alert, Tooltip, Grid,
 } from '@mui/material';
 import { Add, Delete, FolderOpen, Edit } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { topicsApi } from '../../api/topics.api';
 import type { Topic } from '../../api/topics.api';
 
 export default function TopicsPage() {
+  const navigate = useNavigate();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -114,7 +116,7 @@ export default function TopicsPage() {
           : topics.map((topic) => (
               <Grid key={topic.id} size={{ xs: 12, sm: 6, md: 4 }}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <CardActionArea sx={{ flex: 1 }}>
+                  <CardActionArea sx={{ flex: 1 }} onClick={() => navigate(`/topics/${topic.id}`)}>
                     <CardContent>
                       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                         <FolderOpen color="primary" />

@@ -7,6 +7,7 @@ import RegisterPage from './pages/Auth/RegisterPage';
 import AuthCallbackPage from './pages/Auth/AuthCallbackPage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
 import TopicsPage from './pages/Topics/TopicsPage';
+import TopicDetailPage from './pages/Topics/TopicDetailPage';
 import ChatPage from './pages/Chat/ChatPage';
 import QuizPage from './pages/Quiz/QuizPage';
 import ProfilePage from './pages/Profile/ProfilePage';
@@ -43,6 +44,7 @@ export default function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/topics" element={<TopicsPage />} />
+            <Route path="/topics/:id" element={<TopicDetailPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/quiz" element={<QuizPage />} />
             <Route path="/profile" element={<ProfilePage />} />
