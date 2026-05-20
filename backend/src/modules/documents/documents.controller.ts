@@ -1,7 +1,7 @@
 import {
   Controller, Get, Post, Delete, Param, Body, Query,
   UseGuards, UseInterceptors, UploadedFile, ParseFilePipe,
-  MaxFileSizeValidator, FileTypeValidator,
+  MaxFileSizeValidator, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -10,6 +10,13 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../../database/entities/user.entity';
 import { DocumentsService } from './documents.service';
+
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+];
 
 @Controller('documents')
 @UseGuards(JwtAuthGuard)
@@ -33,9 +40,6 @@ export class DocumentsController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }), // 50 MB
-          new FileTypeValidator({
-            fileType: /(pdf|msword|vnd\.openxmlformats|plain|text)/,
-          }),
         ],
       }),
     )
@@ -43,6 +47,13 @@ export class DocumentsController {
     @CurrentUser() user: User,
     @Body('topicId') topicId?: string,
   ) {
+    // FileTypeValidator requires buffer (not available with diskStorage) so we
+    // validate the mimetype reported by multer instead.
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Unsupported file type. Please upload a PDF, Word document (.docx), or plain text (.txt) file.',
+      );
+    }
     return this.documentsService.uploadDocument({
       userId: user.id,
       topicId,

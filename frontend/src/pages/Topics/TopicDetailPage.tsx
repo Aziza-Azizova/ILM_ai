@@ -156,21 +156,26 @@ export default function TopicDetailPage() {
           >
             Paste text
           </Button>
-          <Button
-            variant="contained"
-            startIcon={uploading ? <CircularProgress size={16} /> : <Upload />}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? 'Uploading…' : 'Upload file'}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            hidden
-            accept=".pdf,.doc,.docx,.txt"
-            onChange={handleFileUpload}
-          />
+          <Box>
+            <Button
+              variant="contained"
+              startIcon={uploading ? <CircularProgress size={16} /> : <Upload />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? 'Uploading…' : 'Upload file'}
+            </Button>
+            <Typography variant="caption" color="text.disabled" display="block" sx={{ mt: 0.5, textAlign: 'center' }}>
+              PDF · DOCX · TXT · max 50 MB
+            </Typography>
+            <input
+              ref={fileInputRef}
+              type="file"
+              hidden
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={handleFileUpload}
+            />
+          </Box>
         </Stack>
       </Box>
 
@@ -182,7 +187,7 @@ export default function TopicDetailPage() {
           <InsertDriveFile sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
           <Typography variant="h6" color="text.secondary" gutterBottom>No documents yet</Typography>
           <Typography color="text.disabled" sx={{ mb: 3 }}>
-            Upload a PDF, Word document, or paste text to get started
+            Supported formats: PDF, Word (.docx), plain text (.txt) — max 50 MB
           </Typography>
           <Stack direction="row" spacing={2} justifyContent="center">
             <Button variant="contained" startIcon={<Upload />} onClick={() => fileInputRef.current?.click()}>
