@@ -5,9 +5,10 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AiModule } from './modules/ai/ai.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { TopicsModule } from './modules/topics/topics.module';
+import { UsersModule } from './modules/users/users.module';
 
 // Week 2+ modules — uncomment as we build them:
-// import { TopicsModule } from './modules/topics/topics.module';
 // import { QuizModule } from './modules/quiz/quiz.module';
 // import { PlansModule } from './modules/plans/plans.module';
 // import { GapsModule } from './modules/gaps/gaps.module';
@@ -22,6 +23,8 @@ import { ChatModule } from './modules/chat/chat.module';
     AiModule,
     DocumentsModule,
     ChatModule,
+    TopicsModule,
+    UsersModule,
   ],
 })
 export class AppModule {}

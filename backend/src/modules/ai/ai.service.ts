@@ -10,19 +10,32 @@ import { COMPANION_SYSTEM_PROMPT, QUIZ_SYSTEM_PROMPT } from './prompts/companion
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private claude: Anthropic;
-  private openai: OpenAI;
+  private _claude: Anthropic | null = null;
+  private _openai: OpenAI | null = null;
 
   constructor(
     private config: ConfigService,
     @InjectRepository(LlmLog) private logRepo: Repository<LlmLog>,
-  ) {
-    this.claude = new Anthropic({
-      apiKey: this.config.get<string>('ANTHROPIC_API_KEY'),
-    });
-    this.openai = new OpenAI({
-      apiKey: this.config.get<string>('OPENAI_API_KEY'),
-    });
+  ) {}
+
+  // Lazy getters — clients are created on first use so missing keys don't crash startup.
+  // Calls will fail with a clear error message when a key is actually needed.
+  private get claude(): Anthropic {
+    if (!this._claude) {
+      const apiKey = this.config.get<string>('ANTHROPIC_API_KEY');
+      if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set in .env');
+      this._claude = new Anthropic({ apiKey });
+    }
+    return this._claude;
+  }
+
+  private get openai(): OpenAI {
+    if (!this._openai) {
+      const apiKey = this.config.get<string>('OPENAI_API_KEY');
+      if (!apiKey) throw new Error('OPENAI_API_KEY is not set in .env');
+      this._openai = new OpenAI({ apiKey });
+    }
+    return this._openai;
   }
 
   // ─── Embeddings ──────────────────────────────────────────────────────────────
