@@ -8,8 +8,8 @@ import { ChatModule } from './modules/chat/chat.module';
 import { TopicsModule } from './modules/topics/topics.module';
 import { UsersModule } from './modules/users/users.module';
 
+import { QuizModule } from './modules/quiz/quiz.module';
 // Week 2+ modules — uncomment as we build them:
-// import { QuizModule } from './modules/quiz/quiz.module';
 // import { PlansModule } from './modules/plans/plans.module';
 // import { GapsModule } from './modules/gaps/gaps.module';
 // import { TelegramModule } from './modules/telegram/telegram.module';
@@ -25,6 +25,7 @@ import { UsersModule } from './modules/users/users.module';
     ChatModule,
     TopicsModule,
     UsersModule,
+    QuizModule,
   ],
 })
 export class AppModule {}
