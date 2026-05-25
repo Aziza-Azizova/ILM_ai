@@ -1,19 +1,20 @@
-import {
-  Injectable, BadRequestException, NotFoundException, Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, FindOptionsWhere } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>;
 import * as mammoth from 'mammoth';
-import { Document, DocumentStatus } from '../../database/entities/document.entity';
+// Pin to pdf-parse@1.1.1 — newer versions changed their export shape.
+import pdfParse from 'pdf-parse';
+import {
+  Document,
+  DocumentStatus,
+} from '../../database/entities/document.entity';
 import { DocumentChunk } from '../../database/entities/document-chunk.entity';
 import { AiService } from '../ai/ai.service';
 
-const CHUNK_SIZE = 500;       // tokens (approximate chars * 0.75)
-const CHUNK_OVERLAP = 50;     // overlap between chunks to preserve context
+const CHUNK_SIZE = 500; // tokens (approximate chars * 0.75)
+const CHUNK_OVERLAP = 50; // overlap between chunks to preserve context
 
 @Injectable()
 export class DocumentsService {
@@ -21,7 +22,8 @@ export class DocumentsService {
 
   constructor(
     @InjectRepository(Document) private docRepo: Repository<Document>,
-    @InjectRepository(DocumentChunk) private chunkRepo: Repository<DocumentChunk>,
+    @InjectRepository(DocumentChunk)
+    private chunkRepo: Repository<DocumentChunk>,
     private aiService: AiService,
     private dataSource: DataSource,
   ) {}
@@ -43,7 +45,7 @@ export class DocumentsService {
     await this.docRepo.save(doc);
 
     // Process asynchronously — don't await
-    this.processDocument(doc.id).catch(err =>
+    this.processDocument(doc.id).catch((err) =>
       this.logger.error(`Processing failed for doc ${doc.id}`, err),
     );
 
@@ -71,7 +73,7 @@ export class DocumentsService {
     });
     await this.docRepo.save(doc);
 
-    this.processDocument(doc.id).catch(err =>
+    this.processDocument(doc.id).catch((err) =>
       this.logger.error(`Processing failed for doc ${doc.id}`, err),
     );
 
@@ -89,7 +91,7 @@ export class DocumentsService {
       const chunks = this.chunkText(text);
 
       // Embed and save chunks in DB transaction
-      await this.dataSource.transaction(async manager => {
+      await this.dataSource.transaction(async (manager) => {
         for (let i = 0; i < chunks.length; i++) {
           const embedding = await this.aiService.embed(chunks[i]);
           // Store embedding as pgvector using raw SQL (TypeORM doesn't support vector type)
@@ -110,7 +112,7 @@ export class DocumentsService {
       this.logger.error(`Document ${docId} processing error`, err);
       await this.docRepo.update(docId, {
         status: DocumentStatus.FAILED,
-        errorMessage: err.message,
+        errorMessage: err instanceof Error ? err.message : String(err),
       });
     }
   }
@@ -124,7 +126,8 @@ export class DocumentsService {
     }
 
     if (
-      doc.mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      doc.mimeType ===
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       doc.mimeType === 'application/msword'
     ) {
       const result = await mammoth.extractRawText({ buffer });
@@ -137,7 +140,7 @@ export class DocumentsService {
 
   private chunkText(text: string): string[] {
     // Split on sentence boundaries, then group into ~CHUNK_SIZE word chunks
-    const words = text.split(/\s+/).filter(w => w.length > 0);
+    const words = text.split(/\s+/).filter((w) => w.length > 0);
     const chunks: string[] = [];
     let start = 0;
 
@@ -147,7 +150,7 @@ export class DocumentsService {
       start += CHUNK_SIZE - CHUNK_OVERLAP;
     }
 
-    return chunks.filter(c => c.trim().length > 20); // skip tiny fragments
+    return chunks.filter((c) => c.trim().length > 20); // skip tiny fragments
   }
 
   // ─── Semantic Search ─────────────────────────────────────────────────────────
@@ -157,7 +160,14 @@ export class DocumentsService {
     query: string;
     topicId?: string;
     limit?: number;
-  }): Promise<Array<{ chunkId: string; content: string; documentName: string; score: number }>> {
+  }): Promise<
+    Array<{
+      chunkId: string;
+      content: string;
+      documentName: string;
+      score: number;
+    }>
+  > {
     const embedding = await this.aiService.embed(params.query);
     const vectorStr = `[${embedding.join(',')}]`;
     const limit = params.limit ?? 5;
@@ -191,7 +201,7 @@ export class DocumentsService {
   // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
   async findByUser(userId: string, topicId?: string) {
-    const where: any = { userId };
+    const where: FindOptionsWhere<Document> = { userId };
     if (topicId) where.topicId = topicId;
     return this.docRepo.find({ where, order: { createdAt: 'DESC' } });
   }

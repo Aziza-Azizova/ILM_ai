@@ -205,7 +205,9 @@ export class InitialSchema1000000000001 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE IF EXISTS quiz_sessions`);
     await queryRunner.query(`DROP TABLE IF EXISTS chat_messages`);
     await queryRunner.query(`DROP TABLE IF EXISTS chat_sessions`);
-    await queryRunner.query(`DROP INDEX IF EXISTS document_chunks_embedding_idx`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS document_chunks_embedding_idx`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS document_chunks`);
     await queryRunner.query(`DROP TABLE IF EXISTS documents`);
     await queryRunner.query(`DROP TABLE IF EXISTS topics`);

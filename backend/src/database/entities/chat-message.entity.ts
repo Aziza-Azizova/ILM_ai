@@ -1,6 +1,10 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  ManyToOne, JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ChatSession } from './chat-session.entity';
 
@@ -12,29 +16,29 @@ export enum MessageRole {
 @Entity('chat_messages')
 export class ChatMessage {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  chatSessionId: string;
+  chatSessionId!: string;
 
   @ManyToOne(() => ChatSession, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'chatSessionId' })
-  chatSession: ChatSession;
+  chatSession!: ChatSession;
 
   @Column({ type: 'enum', enum: MessageRole })
-  role: MessageRole;
+  role!: MessageRole;
 
   @Column('text')
-  content: string;
+  content!: string;
 
   // JSON array of { chunkId, documentName, excerpt }
   @Column({ type: 'jsonb', nullable: true })
-  sourceChunks: Array<{
+  sourceChunks!: Array<{
     chunkId: string;
     documentName: string;
     excerpt: string;
-  }>;
+  }> | null;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../../database/entities/user.entity';
@@ -10,7 +19,10 @@ export class TopicsController {
   constructor(private topicsService: TopicsService) {}
 
   @Post()
-  create(@CurrentUser() user: User, @Body() body: { name: string; description?: string }) {
+  create(
+    @CurrentUser() user: User,
+    @Body() body: { name: string; description?: string },
+  ) {
     return this.topicsService.create(user.id, body);
   }
 

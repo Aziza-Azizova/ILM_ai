@@ -1,15 +1,16 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Topic } from '../../database/entities/topic.entity';
 
 @Injectable()
 export class TopicsService {
-  constructor(
-    @InjectRepository(Topic) private topicRepo: Repository<Topic>,
-  ) {}
+  constructor(@InjectRepository(Topic) private topicRepo: Repository<Topic>) {}
 
-  async create(userId: string, dto: { name: string; description?: string }): Promise<Topic> {
+  async create(
+    userId: string,
+    dto: { name: string; description?: string },
+  ): Promise<Topic> {
     const topic = this.topicRepo.create({ userId, ...dto });
     return this.topicRepo.save(topic);
   }
@@ -27,7 +28,11 @@ export class TopicsService {
     return topic;
   }
 
-  async update(id: string, userId: string, dto: { name?: string; description?: string }): Promise<Topic> {
+  async update(
+    id: string,
+    userId: string,
+    dto: { name?: string; description?: string },
+  ): Promise<Topic> {
     const topic = await this.findOne(id, userId);
     Object.assign(topic, dto);
     return this.topicRepo.save(topic);

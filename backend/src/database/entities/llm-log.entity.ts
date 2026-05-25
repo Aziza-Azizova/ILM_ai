@@ -1,36 +1,39 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
 } from 'typeorm';
 
 @Entity('llm_logs')
 export class LlmLog {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ nullable: true })
-  userId: string;
-
-  @Column() // 'anthropic' | 'openai'
-  provider: string;
+  userId!: string | null;
 
   @Column()
-  model: string;
+  provider!: string;
 
   @Column()
-  feature: string; // 'chat' | 'quiz' | 'plan' | 'gaps' | 'embedding'
+  model!: string;
+
+  @Column()
+  feature!: string;
 
   @Column({ type: 'int', default: 0 })
-  promptTokens: number;
+  promptTokens!: number;
 
   @Column({ type: 'int', default: 0 })
-  completionTokens: number;
+  completionTokens!: number;
 
   @Column({ type: 'int', default: 0 })
-  latencyMs: number;
+  latencyMs!: number;
 
   @Column({ nullable: true })
-  error: string;
+  error!: string | null;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

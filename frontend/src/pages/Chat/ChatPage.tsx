@@ -38,7 +38,7 @@ function SourceCitations({ sources }: { sources: SourceChunk[] }) {
               <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>
                 {s.documentName}
               </Typography>
-              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                 "{s.excerpt}"
               </Typography>
             </Paper>

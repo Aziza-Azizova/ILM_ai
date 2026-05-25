@@ -1,6 +1,10 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  ManyToOne, JoinColumn, OneToMany,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Topic } from './topic.entity';
@@ -14,34 +18,38 @@ export enum QuizDifficulty {
 @Entity('quiz_sessions')
 export class QuizSession {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  userId: string;
+  userId!: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user!: User;
 
   @Column({ nullable: true })
-  topicId: string;
+  topicId!: string | null;
 
   @ManyToOne(() => Topic, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'topicId' })
-  topic: Topic;
+  topic!: Topic | null;
 
-  @Column({ type: 'enum', enum: QuizDifficulty, default: QuizDifficulty.GENTLE })
-  difficulty: QuizDifficulty;
+  @Column({
+    type: 'enum',
+    enum: QuizDifficulty,
+    default: QuizDifficulty.GENTLE,
+  })
+  difficulty!: QuizDifficulty;
 
   @Column({ type: 'float', default: 0 })
-  score: number; // 0–100
+  score!: number; // 0–100
 
   @Column({ default: 0 })
-  totalQuestions: number;
+  totalQuestions!: number;
 
   @Column({ default: 0 })
-  correctAnswers: number;
+  correctAnswers!: number;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

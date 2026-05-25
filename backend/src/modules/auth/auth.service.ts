@@ -1,5 +1,7 @@
 import {
-  Injectable, ConflictException, UnauthorizedException,
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -17,7 +19,9 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    const existing = await this.userRepo.findOne({
+      where: { email: dto.email },
+    });
     if (existing) throw new ConflictException('Email already in use');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
@@ -37,7 +41,8 @@ export class AuthService {
       .where('u.email = :email', { email: dto.email })
       .getOne();
 
-    if (!user || !user.passwordHash) throw new UnauthorizedException('Invalid credentials');
+    if (!user || !user.passwordHash)
+      throw new UnauthorizedException('Invalid credentials');
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
@@ -45,12 +50,20 @@ export class AuthService {
     return this.signToken(user);
   }
 
-  async googleLogin(googleUser: { googleId: string; email: string; name: string }) {
-    let user = await this.userRepo.findOne({ where: { googleId: googleUser.googleId } });
+  async googleLogin(googleUser: {
+    googleId: string;
+    email: string;
+    name: string;
+  }) {
+    let user = await this.userRepo.findOne({
+      where: { googleId: googleUser.googleId },
+    });
 
     if (!user) {
       // Check if email already exists (link accounts)
-      user = await this.userRepo.findOne({ where: { email: googleUser.email } });
+      user = await this.userRepo.findOne({
+        where: { email: googleUser.email },
+      });
       if (user) {
         user.googleId = googleUser.googleId;
         await this.userRepo.save(user);

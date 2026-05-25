@@ -14,7 +14,10 @@ export class UsersService {
     return this.userRepo.findOne({ where: { id: userId } });
   }
 
-  async updateGoal(userId: string, dto: { goalText?: string; goalDate?: string }) {
+  async updateGoal(
+    userId: string,
+    dto: { goalText?: string; goalDate?: string },
+  ) {
     await this.userRepo.update(userId, {
       goalText: dto.goalText,
       goalDate: dto.goalDate ? new Date(dto.goalDate) : undefined,
@@ -22,30 +25,40 @@ export class UsersService {
     return this.userRepo.findOne({ where: { id: userId } });
   }
 
-  async updateProfile(userId: string, dto: { name?: string; reminderTime?: string }) {
+  async updateProfile(
+    userId: string,
+    dto: { name?: string; reminderTime?: string },
+  ) {
     await this.userRepo.update(userId, dto);
     return this.userRepo.findOne({ where: { id: userId } });
   }
 
   async getStats(userId: string) {
+    type CountRow = [{ count: string }];
+    type ScoreRow = { score: number; createdAt: string };
+
     const [topicsCount, documentsCount, chatSessionsCount, quizSessionsCount] =
       await Promise.all([
-        this.dataSource.query(
-          `SELECT COUNT(*) FROM topics WHERE "userId" = $1`, [userId]
+        this.dataSource.query<CountRow>(
+          `SELECT COUNT(*) FROM topics WHERE "userId" = $1`,
+          [userId],
         ),
-        this.dataSource.query(
-          `SELECT COUNT(*) FROM documents WHERE "userId" = $1 AND status = 'ready'`, [userId]
+        this.dataSource.query<CountRow>(
+          `SELECT COUNT(*) FROM documents WHERE "userId" = $1 AND status = 'ready'`,
+          [userId],
         ),
-        this.dataSource.query(
-          `SELECT COUNT(*) FROM chat_sessions WHERE "userId" = $1`, [userId]
+        this.dataSource.query<CountRow>(
+          `SELECT COUNT(*) FROM chat_sessions WHERE "userId" = $1`,
+          [userId],
         ),
-        this.dataSource.query(
-          `SELECT COUNT(*) FROM quiz_sessions WHERE "userId" = $1`, [userId]
+        this.dataSource.query<CountRow>(
+          `SELECT COUNT(*) FROM quiz_sessions WHERE "userId" = $1`,
+          [userId],
         ),
       ]);
 
     // Quiz score trend — last 7 sessions
-    const recentScores = await this.dataSource.query(
+    const recentScores = await this.dataSource.query<ScoreRow[]>(
       `SELECT score, "createdAt" FROM quiz_sessions
        WHERE "userId" = $1
        ORDER BY "createdAt" DESC LIMIT 7`,
@@ -60,7 +73,7 @@ export class UsersService {
       chatSessionsCount: Number(chatSessionsCount[0].count),
       quizSessionsCount: Number(quizSessionsCount[0].count),
       streak: user?.streak ?? 0,
-      scoreTrend: recentScores.reverse(), // oldest first for chart
+      scoreTrend: [...recentScores].reverse(), // oldest first for chart
     };
   }
 }

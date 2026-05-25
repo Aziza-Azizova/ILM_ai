@@ -1,6 +1,9 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  UpdateDateColumn, OneToMany,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 export enum UserPlan {
@@ -11,44 +14,44 @@ export enum UserPlan {
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
-  @Column({ nullable: true })
-  name: string;
+  @Column()
+  name!: string;
 
   @Column({ nullable: true, select: false })
-  passwordHash: string;
+  passwordHash!: string | null;
 
   @Column({ nullable: true })
-  googleId: string;
+  googleId!: string | null;
 
   @Column({ type: 'enum', enum: UserPlan, default: UserPlan.FREE })
-  plan: UserPlan;
+  plan!: UserPlan;
 
   @Column({ nullable: true })
-  telegramChatId: string;
+  telegramChatId!: string | null;
 
   @Column({ nullable: true })
-  goalText: string;
+  goalText!: string | null;
 
   @Column({ nullable: true, type: 'date' })
-  goalDate: Date;
+  goalDate!: Date | null;
 
   @Column({ nullable: true })
-  reminderTime: string; // HH:MM format
+  reminderTime!: string | null;
 
   @Column({ default: 0 })
-  streak: number;
+  streak!: number;
 
   @Column({ nullable: true, type: 'date' })
-  lastActiveDate: Date;
+  lastActiveDate!: Date | null;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

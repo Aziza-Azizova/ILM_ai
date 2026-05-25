@@ -1,32 +1,27 @@
 import {
-  Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger,
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { QuizSession } from '../../database/entities/quiz-session.entity';
-import { QuizQuestion, QuestionType } from '../../database/entities/quiz-question.entity';
-import { AiService } from '../ai/ai.service';
+import {
+  QuizQuestion,
+  QuestionType,
+} from '../../database/entities/quiz-question.entity';
+import { AiService, GeneratedQuestion } from '../ai/ai.service';
 import { DocumentsService } from '../documents/documents.service';
 import { StartQuizDto } from './dto/start-quiz.dto';
 import { SubmitAnswerDto } from './dto/submit-answer.dto';
 
-/** Shape returned by AI for each generated question */
-interface GeneratedQuestion {
-  question: string;
-  type: 'multiple_choice' | 'short_answer' | 'open_ended';
-  options?: string[];
-  correctAnswer: string;
-  explanation: string;
-  sourceExcerpt: string;
-}
-
 @Injectable()
 export class QuizService {
-  private readonly logger = new Logger(QuizService.name);
-
   constructor(
     @InjectRepository(QuizSession) private sessionRepo: Repository<QuizSession>,
-    @InjectRepository(QuizQuestion) private questionRepo: Repository<QuizQuestion>,
+    @InjectRepository(QuizQuestion)
+    private questionRepo: Repository<QuizQuestion>,
     private aiService: AiService,
     private documentsService: DocumentsService,
     private dataSource: DataSource,
@@ -34,7 +29,10 @@ export class QuizService {
 
   // ─── Start a new quiz session ────────────────────────────────────────────────
 
-  async startQuiz(userId: string, dto: StartQuizDto): Promise<QuizSession & { questions: QuizQuestion[] }> {
+  async startQuiz(
+    userId: string,
+    dto: StartQuizDto,
+  ): Promise<QuizSession & { questions: QuizQuestion[] }> {
     // Retrieve relevant context from uploaded materials
     const searchResult = await this.documentsService.semanticSearch({
       userId,
@@ -50,7 +48,7 @@ export class QuizService {
     }
 
     const context = searchResult
-      .map(r => `[${r.documentName}]\n${r.content}`)
+      .map((r) => `[${r.documentName}]\n${r.content}`)
       .join('\n\n---\n\n');
 
     // Generate questions via AI
@@ -62,7 +60,7 @@ export class QuizService {
     });
 
     // Persist session + questions in a transaction
-    return this.dataSource.transaction(async manager => {
+    return this.dataSource.transaction(async (manager) => {
       const session = manager.create(QuizSession, {
         userId,
         topicId: dto.topicId,
@@ -79,7 +77,7 @@ export class QuizService {
           quizSessionId: session.id,
           question: q.question,
           type: q.type as QuestionType,
-          options: q.options ?? null,
+          options: q.options ?? undefined,
           correctAnswer: q.correctAnswer,
           explanation: q.explanation,
           sourceExcerpt: q.sourceExcerpt,
@@ -98,8 +96,15 @@ export class QuizService {
     userId: string,
     sessionId: string,
     dto: SubmitAnswerDto,
-  ): Promise<{ isCorrect: boolean; feedback: string; correctAnswer: string; explanation: string }> {
-    const session = await this.sessionRepo.findOne({ where: { id: sessionId, userId } });
+  ): Promise<{
+    isCorrect: boolean;
+    feedback: string;
+    correctAnswer: string;
+    explanation: string;
+  }> {
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId, userId },
+    });
     if (!session) throw new NotFoundException('Quiz session not found');
 
     const question = await this.questionRepo.findOne({
@@ -115,7 +120,8 @@ export class QuizService {
 
     if (question.type === QuestionType.MULTIPLE_CHOICE) {
       // For MC just compare — no need to call Claude
-      isCorrect = dto.userAnswer.trim().toLowerCase() ===
+      isCorrect =
+        dto.userAnswer.trim().toLowerCase() ===
         question.correctAnswer.trim().toLowerCase();
       feedback = isCorrect
         ? `Correct! ${question.explanation}`
@@ -150,13 +156,20 @@ export class QuizService {
   // ─── Finish session ──────────────────────────────────────────────────────────
 
   async finishSession(userId: string, sessionId: string): Promise<QuizSession> {
-    const session = await this.sessionRepo.findOne({ where: { id: sessionId, userId } });
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId, userId },
+    });
     if (!session) throw new NotFoundException('Quiz session not found');
 
-    const questions = await this.questionRepo.find({ where: { quizSessionId: sessionId } });
-    const answered = questions.filter(q => q.isCorrect !== null && q.isCorrect !== undefined);
-    const correct = answered.filter(q => q.isCorrect).length;
-    const score = answered.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
+    const questions = await this.questionRepo.find({
+      where: { quizSessionId: sessionId },
+    });
+    const answered = questions.filter(
+      (q) => q.isCorrect !== null && q.isCorrect !== undefined,
+    );
+    const correct = answered.filter((q) => q.isCorrect).length;
+    const score =
+      answered.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
 
     await this.sessionRepo.update(sessionId, {
       correctAnswers: correct,
@@ -165,8 +178,9 @@ export class QuizService {
     });
 
     // Update streak: increment if last active was yesterday, reset if gap > 1 day, keep if already today
-    await this.dataSource.query(
-      `UPDATE users SET
+    await this.dataSource
+      .query(
+        `UPDATE users SET
          "streak" = CASE
            WHEN "lastActiveDate" = CURRENT_DATE THEN streak
            WHEN "lastActiveDate" = CURRENT_DATE - INTERVAL '1 day' THEN streak + 1
@@ -174,16 +188,24 @@ export class QuizService {
          END,
          "lastActiveDate" = CURRENT_DATE
        WHERE id = $1`,
-      [userId],
-    ).catch(() => {});
+        [userId],
+      )
+      .catch(() => {});
 
-    return this.sessionRepo.findOne({ where: { id: sessionId } }) as Promise<QuizSession>;
+    return this.sessionRepo.findOne({
+      where: { id: sessionId },
+    }) as Promise<QuizSession>;
   }
 
   // ─── Get a session with questions ────────────────────────────────────────────
 
-  async getSession(userId: string, sessionId: string): Promise<QuizSession & { questions: QuizQuestion[] }> {
-    const session = await this.sessionRepo.findOne({ where: { id: sessionId, userId } });
+  async getSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<QuizSession & { questions: QuizQuestion[] }> {
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId, userId },
+    });
     if (!session) throw new NotFoundException('Quiz session not found');
 
     const questions = await this.questionRepo.find({

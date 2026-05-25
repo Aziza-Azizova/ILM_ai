@@ -1,6 +1,9 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column,
-  ManyToOne, JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { QuizSession } from './quiz-session.entity';
 
@@ -13,40 +16,39 @@ export enum QuestionType {
 @Entity('quiz_questions')
 export class QuizQuestion {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  quizSessionId: string;
+  quizSessionId!: string;
 
   @ManyToOne(() => QuizSession, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'quizSessionId' })
-  quizSession: QuizSession;
+  quizSession!: QuizSession;
 
   @Column('text')
-  question: string;
+  question!: string;
 
   @Column({ type: 'enum', enum: QuestionType })
-  type: QuestionType;
+  type!: QuestionType;
 
-  // For multiple choice: JSON array of options
   @Column({ type: 'jsonb', nullable: true })
-  options: string[];
+  options!: string[] | null;
 
   @Column('text')
-  correctAnswer: string;
+  correctAnswer!: string;
 
   @Column({ type: 'text', nullable: true })
-  userAnswer: string;
+  userAnswer!: string | null;
 
   @Column({ nullable: true })
-  isCorrect: boolean;
+  isCorrect!: boolean | null;
 
-  @Column({ type: 'text', nullable: true })
-  explanation: string;
-
-  @Column({ nullable: true })
-  sourceChunkId: string;
+  @Column('text')
+  explanation!: string;
 
   @Column({ nullable: true })
-  sourceExcerpt: string;
+  sourceChunkId!: string | null;
+
+  @Column({ nullable: true })
+  sourceExcerpt!: string | null;
 }

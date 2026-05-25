@@ -8,7 +8,7 @@ async function bootstrap() {
   // Global validation pipe — enforces all DTOs
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,         // strip unknown fields
+      whitelist: true, // strip unknown fields
       forbidNonWhitelisted: true,
       transform: true,
     }),
@@ -27,4 +27,4 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`🚀 Ilm AI backend running on http://localhost:${port}/api`);
 }
-bootstrap();
+void bootstrap();

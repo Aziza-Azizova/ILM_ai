@@ -1,32 +1,35 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column,
-  ManyToOne, JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Document } from './document.entity';
 
 @Entity('document_chunks')
 export class DocumentChunk {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  documentId: string;
+  documentId!: string;
 
   @ManyToOne(() => Document, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'documentId' })
-  document: Document;
+  document!: Document;
 
   @Column('text')
-  content: string;
+  content!: string;
 
   // pgvector column — stored as raw SQL via migration
   // TypeORM doesn't natively support vector type, so we use a workaround
   @Column({ type: 'text', nullable: true, select: false })
-  embeddingRaw: string;
+  embeddingRaw!: string | null;
 
   @Column({ type: 'int' })
-  chunkIndex: number;
+  chunkIndex!: number;
 
   @Column({ nullable: true })
-  pageNumber: number;
+  pageNumber!: number | null;
 }

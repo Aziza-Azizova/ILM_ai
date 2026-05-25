@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import type { StringValue } from 'ms';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -16,10 +17,12 @@ import { User } from '../../database/entities/user.entity';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET') as string,
-        signOptions: { expiresIn: (config.get<string>('JWT_EXPIRES_IN') ?? '7d') as any },
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret: string = config.get<string>('JWT_SECRET') ?? '';
+        const expiresIn: StringValue =
+          config.get<StringValue>('JWT_EXPIRES_IN') ?? '7d';
+        return { secret, signOptions: { expiresIn } };
+      },
     }),
   ],
   controllers: [AuthController],

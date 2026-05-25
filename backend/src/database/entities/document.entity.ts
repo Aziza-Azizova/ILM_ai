@@ -1,6 +1,10 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  ManyToOne, JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Topic } from './topic.entity';
@@ -15,43 +19,47 @@ export enum DocumentStatus {
 @Entity('documents')
 export class Document {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  userId: string;
+  userId!: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user!: User;
 
   @Column({ nullable: true })
-  topicId: string;
+  topicId!: string | null;
 
   @ManyToOne(() => Topic, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'topicId' })
-  topic: Topic;
+  topic!: Topic | null;
 
   @Column()
-  filename: string;
+  filename!: string;
 
   @Column()
-  originalName: string;
+  originalName!: string;
 
   @Column()
-  filePath: string;
+  filePath!: string;
 
   @Column({ default: 'text/plain' })
-  mimeType: string;
+  mimeType!: string;
 
-  @Column({ type: 'enum', enum: DocumentStatus, default: DocumentStatus.PENDING })
-  status: DocumentStatus;
+  @Column({
+    type: 'enum',
+    enum: DocumentStatus,
+    default: DocumentStatus.PENDING,
+  })
+  status!: DocumentStatus;
 
   @Column({ nullable: true })
-  errorMessage: string;
+  errorMessage!: string | null;
 
   @Column({ default: 0 })
-  chunkCount: number;
+  chunkCount!: number;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

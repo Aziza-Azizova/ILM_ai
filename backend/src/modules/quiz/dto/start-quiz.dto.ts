@@ -7,10 +7,10 @@ export class StartQuizDto {
   topicId?: string;
 
   @IsEnum(QuizDifficulty)
-  difficulty: QuizDifficulty;
+  difficulty!: QuizDifficulty;
 
   @IsInt()
   @Min(3)
   @Max(20)
-  questionCount: number;
+  questionCount!: number;
 }

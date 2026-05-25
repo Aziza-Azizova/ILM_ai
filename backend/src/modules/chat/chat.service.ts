@@ -2,7 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatSession } from '../../database/entities/chat-session.entity';
-import { ChatMessage, MessageRole } from '../../database/entities/chat-message.entity';
+import {
+  ChatMessage,
+  MessageRole,
+} from '../../database/entities/chat-message.entity';
 import { AiService } from '../ai/ai.service';
 import { DocumentsService } from '../documents/documents.service';
 
@@ -67,7 +70,7 @@ export class ChatService {
     });
 
     const context = chunks
-      .map(c => `[${c.documentName}]\n${c.content}`)
+      .map((c) => `[${c.documentName}]\n${c.content}`)
       .join('\n\n---\n\n');
 
     // Get recent history (last 10 messages)
@@ -77,8 +80,8 @@ export class ChatService {
       take: 10,
     });
 
-    const historyForAi = history.map(m => ({
-      role: m.role as 'user' | 'assistant',
+    const historyForAi = history.map((m) => ({
+      role: m.role,
       content: m.content,
     }));
 
@@ -100,7 +103,7 @@ export class ChatService {
         chatSessionId: params.sessionId,
         role: MessageRole.ASSISTANT,
         content: fullResponse,
-        sourceChunks: chunks.map(c => ({
+        sourceChunks: chunks.map((c) => ({
           chunkId: c.chunkId,
           documentName: c.documentName,
           excerpt: c.content.slice(0, 200),

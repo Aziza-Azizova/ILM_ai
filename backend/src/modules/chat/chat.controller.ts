@@ -1,5 +1,11 @@
 import {
-  Controller, Get, Post, Param, Body, Res, UseGuards,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -13,10 +19,7 @@ export class ChatController {
   constructor(private chatService: ChatService) {}
 
   @Post('sessions')
-  createSession(
-    @CurrentUser() user: User,
-    @Body() body: { topicId?: string },
-  ) {
+  createSession(@CurrentUser() user: User, @Body() body: { topicId?: string }) {
     return this.chatService.createSession(user.id, body.topicId);
   }
 
@@ -60,7 +63,8 @@ export class ChatController {
       }
       res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     } catch (err) {
-      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+      const message = err instanceof Error ? err.message : String(err);
+      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
     } finally {
       res.end();
     }

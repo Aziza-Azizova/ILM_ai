@@ -5,7 +5,51 @@ import { Repository } from 'typeorm';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { LlmLog } from '../../database/entities/llm-log.entity';
-import { COMPANION_SYSTEM_PROMPT, QUIZ_SYSTEM_PROMPT } from './prompts/companion.prompt';
+import {
+  COMPANION_SYSTEM_PROMPT,
+  QUIZ_SYSTEM_PROMPT,
+} from './prompts/companion.prompt';
+
+export interface GeneratedQuestion {
+  question: string;
+  type: 'multiple_choice' | 'short_answer' | 'open_ended';
+  options?: string[];
+  correctAnswer: string;
+  explanation: string;
+  sourceExcerpt: string;
+}
+
+const QUESTION_TYPES = new Set([
+  'multiple_choice',
+  'short_answer',
+  'open_ended',
+]);
+
+function isGeneratedQuestion(val: unknown): val is GeneratedQuestion {
+  if (typeof val !== 'object' || val === null) return false;
+  const q = val as Record<string, unknown>;
+  return (
+    typeof q.question === 'string' &&
+    typeof q.type === 'string' &&
+    QUESTION_TYPES.has(q.type) &&
+    typeof q.correctAnswer === 'string' &&
+    typeof q.explanation === 'string' &&
+    typeof q.sourceExcerpt === 'string' &&
+    (q.options === undefined || Array.isArray(q.options))
+  );
+}
+
+function isGeneratedQuestionArray(val: unknown): val is GeneratedQuestion[] {
+  return Array.isArray(val) && val.every(isGeneratedQuestion);
+}
+
+function isEvalResult(
+  val: unknown,
+): val is { isCorrect: boolean; feedback: string } {
+  if (typeof val !== 'object' || val === null) return false;
+  const r = val as Record<string, unknown>;
+  return typeof r.isCorrect === 'boolean' && typeof r.feedback === 'string';
+}
 
 @Injectable()
 export class AiService {
@@ -70,19 +114,19 @@ export class AiService {
     history: Array<{ role: 'user' | 'assistant'; content: string }>;
     userMessage: string;
   }): AsyncGenerator<string> {
-    const systemPrompt = COMPANION_SYSTEM_PROMPT
-      .replace('{context}', params.context)
-      .replace('{history}', ''); // history is in messages array
+    const systemPrompt = COMPANION_SYSTEM_PROMPT.replace(
+      '{context}',
+      params.context,
+    ).replace('{history}', ''); // history is in messages array
 
     const messages: Anthropic.MessageParam[] = [
-      ...params.history.map(m => ({ role: m.role, content: m.content })),
+      ...params.history.map((m) => ({ role: m.role, content: m.content })),
       { role: 'user', content: params.userMessage },
     ];
 
     const start = Date.now();
     let promptTokens = 0;
     let completionTokens = 0;
-    let fullResponse = '';
 
     try {
       const stream = this.claude.messages.stream({
@@ -97,7 +141,6 @@ export class AiService {
           event.type === 'content_block_delta' &&
           event.delta.type === 'text_delta'
         ) {
-          fullResponse += event.delta.text;
           yield event.delta.text;
         }
         if (event.type === 'message_delta' && event.usage) {
@@ -126,7 +169,7 @@ export class AiService {
         promptTokens,
         completionTokens,
         latencyMs: Date.now() - start,
-        error: err.message,
+        error: err instanceof Error ? err.message : String(err),
       });
       throw err;
     }
@@ -139,8 +182,11 @@ export class AiService {
     context: string;
     difficulty: 'gentle' | 'solid' | 'expert';
     questionCount: number;
-  }) {
-    const systemPrompt = QUIZ_SYSTEM_PROMPT.replace('{context}', params.context);
+  }): Promise<GeneratedQuestion[]> {
+    const systemPrompt = QUIZ_SYSTEM_PROMPT.replace(
+      '{context}',
+      params.context,
+    );
     const userPrompt = `Generate exactly ${params.questionCount} questions at "${params.difficulty}" difficulty. Return ONLY the JSON array, no other text.`;
 
     const start = Date.now();
@@ -152,7 +198,8 @@ export class AiService {
         messages: [{ role: 'user', content: userPrompt }],
       });
 
-      const text = response.content[0].type === 'text' ? response.content[0].text : '';
+      const text =
+        response.content[0].type === 'text' ? response.content[0].text : '';
 
       await this.log({
         userId: params.userId,
@@ -164,9 +211,12 @@ export class AiService {
         latencyMs: Date.now() - start,
       });
 
-      // Parse JSON — strip any markdown code fences if present
       const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
-      return JSON.parse(cleaned);
+      const parsed: unknown = JSON.parse(cleaned);
+      if (!isGeneratedQuestionArray(parsed)) {
+        throw new Error('AI returned an unexpected quiz structure');
+      }
+      return parsed;
     } catch (err) {
       this.logger.error('Quiz generation failed', err);
       throw err;
@@ -197,7 +247,8 @@ Respond with valid JSON: { "isCorrect": true/false, "feedback": "explanation of 
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '{}';
+    const text =
+      response.content[0].type === 'text' ? response.content[0].text : '{}';
     await this.log({
       userId: params.userId,
       provider: 'anthropic',
@@ -208,7 +259,12 @@ Respond with valid JSON: { "isCorrect": true/false, "feedback": "explanation of 
       latencyMs: Date.now() - start,
     });
 
-    return JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
+    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed: unknown = JSON.parse(cleaned);
+    if (!isEvalResult(parsed)) {
+      throw new Error('AI returned an unexpected evaluation structure');
+    }
+    return parsed;
   }
 
   // ─── Logging ─────────────────────────────────────────────────────────────────

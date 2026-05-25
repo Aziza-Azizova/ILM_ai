@@ -1,6 +1,10 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  ManyToOne, JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 
@@ -14,27 +18,31 @@ export enum SubscriptionStatus {
 @Entity('subscriptions')
 export class Subscription {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  userId: string;
+  userId!: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user!: User;
 
   @Column({ nullable: true })
-  stripeCustomerId: string;
+  stripeCustomerId!: string | null;
 
   @Column({ nullable: true })
-  stripeSubscriptionId: string;
+  stripeSubscriptionId!: string | null;
 
-  @Column({ type: 'enum', enum: SubscriptionStatus, default: SubscriptionStatus.ACTIVE })
-  status: SubscriptionStatus;
+  @Column({
+    type: 'enum',
+    enum: SubscriptionStatus,
+    default: SubscriptionStatus.ACTIVE,
+  })
+  status!: SubscriptionStatus;
 
   @Column({ nullable: true, type: 'timestamptz' })
-  currentPeriodEnd: Date;
+  currentPeriodEnd!: Date | null;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }
