@@ -21,14 +21,14 @@ export class ChatSession {
   @JoinColumn({ name: 'userId' })
   user!: User;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   topicId!: string | null;
 
   @ManyToOne(() => Topic, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'topicId' })
   topic!: Topic | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   title!: string | null;
 
   @CreateDateColumn()

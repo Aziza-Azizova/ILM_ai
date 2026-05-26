@@ -40,15 +40,15 @@ export class QuizQuestion {
   @Column({ type: 'text', nullable: true })
   userAnswer!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'boolean', nullable: true })
   isCorrect!: boolean | null;
 
   @Column('text')
   explanation!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   sourceChunkId!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   sourceExcerpt!: string | null;
 }

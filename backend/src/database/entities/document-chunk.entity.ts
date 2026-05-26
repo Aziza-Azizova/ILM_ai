@@ -30,6 +30,6 @@ export class DocumentChunk {
   @Column({ type: 'int' })
   chunkIndex!: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   pageNumber!: number | null;
 }

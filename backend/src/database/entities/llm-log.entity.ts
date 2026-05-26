@@ -10,7 +10,7 @@ export class LlmLog {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   userId!: string | null;
 
   @Column()
@@ -31,7 +31,7 @@ export class LlmLog {
   @Column({ type: 'int', default: 0 })
   latencyMs!: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   error!: string | null;
 
   @CreateDateColumn()

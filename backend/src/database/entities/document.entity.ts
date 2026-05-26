@@ -28,7 +28,7 @@ export class Document {
   @JoinColumn({ name: 'userId' })
   user!: User;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   topicId!: string | null;
 
   @ManyToOne(() => Topic, { nullable: true, onDelete: 'SET NULL' })
@@ -54,7 +54,7 @@ export class Document {
   })
   status!: DocumentStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   errorMessage!: string | null;
 
   @Column({ default: 0 })

@@ -27,7 +27,7 @@ export class QuizSession {
   @JoinColumn({ name: 'userId' })
   user!: User;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   topicId!: string | null;
 
   @ManyToOne(() => Topic, { nullable: true, onDelete: 'SET NULL' })

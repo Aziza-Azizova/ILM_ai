@@ -22,25 +22,25 @@ export class User {
   @Column()
   name!: string;
 
-  @Column({ nullable: true, select: false })
+  @Column({ type: 'varchar', nullable: true, select: false })
   passwordHash!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   googleId!: string | null;
 
   @Column({ type: 'enum', enum: UserPlan, default: UserPlan.FREE })
   plan!: UserPlan;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   telegramChatId!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   goalText!: string | null;
 
   @Column({ nullable: true, type: 'date' })
   goalDate!: Date | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   reminderTime!: string | null;
 
   @Column({ default: 0 })
