@@ -1,17 +1,24 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  Box, Button, TextField, Typography, Paper,
-  Divider, Alert, CircularProgress,
+  TextField, CircularProgress, Alert,
 } from '@mui/material';
 import { Google as GoogleIcon } from '@mui/icons-material';
+import axios from 'axios';
 import { authApi } from '../../api/auth.api';
 import { useAuthStore } from '../../store/auth.store';
+import * as S from './RegisterPage.styles';
+
+interface RegisterForm {
+  name: string;
+  email: string;
+  password: string;
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState<RegisterForm>({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -27,31 +34,24 @@ export default function RegisterPage() {
       const { accessToken, user } = await authApi.register(form);
       login(accessToken, user);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message ?? 'Registration failed. Please try again.');
+    } catch (err) {
+      setError(
+        axios.isAxiosError(err)
+          ? (err.response?.data?.message ?? 'Registration failed. Please try again.')
+          : 'Registration failed. Please try again.',
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'background.default',
-        p: 2,
-      }}
-    >
-      <Paper sx={{ p: 4, width: '100%', maxWidth: 420 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-          Start learning with Ilm AI
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+    <S.PageRoot>
+      <S.FormCard>
+        <S.PageTitle variant="h5">Start learning with Ilm AI</S.PageTitle>
+        <S.PageSubtitle variant="body2" color="text.secondary">
           Upload your materials. Get a personal tutor.
-        </Typography>
+        </S.PageSubtitle>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -72,30 +72,26 @@ export default function RegisterPage() {
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
-          <Button
-            fullWidth variant="contained" type="submit" size="large"
-            sx={{ mt: 2, mb: 1 }} disabled={loading}
-          >
+          <S.SubmitButton fullWidth variant="contained" type="submit" size="large" disabled={loading}>
             {loading ? <CircularProgress size={24} /> : 'Create account'}
-          </Button>
+          </S.SubmitButton>
         </form>
 
-        <Divider sx={{ my: 2 }}>or</Divider>
+        <S.OrDivider>or</S.OrDivider>
 
-        <Button
+        <S.SubmitButton
           fullWidth variant="outlined" startIcon={<GoogleIcon />}
           onClick={authApi.googleLogin}
+          sx={{ mt: 0, mb: 0 }}
         >
           Sign up with Google
-        </Button>
+        </S.SubmitButton>
 
-        <Typography variant="body2" sx={{ textAlign: 'center', mt: 3 }}>
+        <S.FooterText variant="body2">
           Already have an account?{' '}
-          <Link to="/login" style={{ color: 'inherit', fontWeight: 600 }}>
-            Sign in
-          </Link>
-        </Typography>
-      </Paper>
-    </Box>
+          <S.FooterLink to="/login">Sign in</S.FooterLink>
+        </S.FooterText>
+      </S.FormCard>
+    </S.PageRoot>
   );
 }

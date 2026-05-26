@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Typography, Button, Card, CardContent, CardActionArea,
-  CardActions, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField, Skeleton, Alert, Tooltip, Grid,
+  Typography, Button, Card, CardContent, CardActionArea,
+  CardActions, IconButton, Dialog, DialogTitle,
+  TextField, Skeleton, Alert, Tooltip, Grid,
 } from '@mui/material';
 import { Add, Delete, FolderOpen, Edit } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { topicsApi } from '../../api/topics.api';
 import type { Topic } from '../../api/topics.api';
+import * as S from './TopicsPage.styles';
+
+interface TopicForm {
+  name: string;
+  description: string;
+}
 
 export default function TopicsPage() {
   const navigate = useNavigate();
@@ -16,21 +22,16 @@ export default function TopicsPage() {
   const [error, setError] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTopic, setEditTopic] = useState<Topic | null>(null);
-  const [form, setForm] = useState({ name: '', description: '' });
+  const [form, setForm] = useState<TopicForm>({ name: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => { load(); }, []);
-
-  const load = async () => {
-    try {
-      setTopics(await topicsApi.getAll());
-    } catch {
-      setError('Failed to load topics');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    topicsApi.getAll()
+      .then(setTopics)
+      .catch(() => setError('Failed to load topics'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const openCreate = () => {
     setEditTopic(null);
@@ -75,18 +76,18 @@ export default function TopicsPage() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 960, mx: 'auto', width: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-        <Box>
+    <S.PageRoot>
+      <S.PageHeader>
+        <div>
           <Typography variant="h4" sx={{ fontWeight: 700 }}>My Topics</Typography>
           <Typography color="text.secondary" sx={{ mt: 0.5 }}>
             Organise your learning materials into topics
           </Typography>
-        </Box>
+        </div>
         <Button variant="contained" startIcon={<Add />} onClick={openCreate}>
           New topic
         </Button>
-      </Box>
+      </S.PageHeader>
 
       {error && <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>{error}</Alert>}
 
@@ -105,7 +106,7 @@ export default function TopicsPage() {
         </Card>
       )}
 
-      {/* Topics grid — MUI v9 */}
+      {/* Topics grid */}
       <Grid container spacing={2}>
         {loading
           ? [1, 2, 3].map((i) => (
@@ -118,19 +119,16 @@ export default function TopicsPage() {
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardActionArea sx={{ flex: 1 }} onClick={() => navigate(`/topics/${topic.id}`)}>
                     <CardContent>
-                      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                         <FolderOpen color="primary" />
                         <Typography sx={{ fontWeight: 600, lineHeight: 1.2 }} variant="h6">
                           {topic.name}
                         </Typography>
-                      </Box>
+                      </div>
                       {topic.description && (
-                        <Typography variant="body2" color="text.secondary" sx={{
-                          display: '-webkit-box', WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                        }}>
+                        <S.DescriptionText variant="body2" color="text.secondary">
                           {topic.description}
-                        </Typography>
+                        </S.DescriptionText>
                       )}
                       <Typography variant="caption" color="text.disabled" sx={{ mt: 1, display: 'block' }}>
                         Created {new Date(topic.createdAt).toLocaleDateString()}
@@ -157,7 +155,7 @@ export default function TopicsPage() {
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editTopic ? 'Edit topic' : 'New topic'}</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
+        <S.StyledDialogContent>
           <TextField
             fullWidth autoFocus label="Topic name" sx={{ mb: 2 }}
             placeholder='e.g. Cloud Architecture, Tax Law, Italian Cooking Theory'
@@ -172,30 +170,30 @@ export default function TopicsPage() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             multiline rows={2}
           />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        </S.StyledDialogContent>
+        <S.StyledDialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving || !form.name.trim()}>
             {saving ? 'Saving…' : editTopic ? 'Save changes' : 'Create topic'}
           </Button>
-        </DialogActions>
+        </S.StyledDialogActions>
       </Dialog>
 
       {/* Delete confirmation */}
       <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
         <DialogTitle>Delete topic?</DialogTitle>
-        <DialogContent>
+        <S.StyledDialogContent>
           <Typography>
             This will also delete all uploaded materials in this topic. This cannot be undone.
           </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        </S.StyledDialogContent>
+        <S.StyledDialogActions>
           <Button onClick={() => setDeleteId(null)}>Cancel</Button>
           <Button variant="contained" color="error" onClick={() => deleteId && handleDelete(deleteId)}>
             Delete
           </Button>
-        </DialogActions>
+        </S.StyledDialogActions>
       </Dialog>
-    </Box>
+    </S.PageRoot>
   );
 }

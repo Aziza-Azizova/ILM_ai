@@ -33,13 +33,17 @@ export interface AnswerFeedback {
   explanation: string;
 }
 
+export interface StartQuizParams {
+  topicId?: string;
+  difficulty: QuizDifficulty;
+  questionCount: number;
+}
+
+export type ActiveQuizSession = QuizSession & { questions: QuizQuestion[] };
+
 export const quizApi = {
   /** Start a new quiz session — returns session + questions (correct answers hidden) */
-  start: async (params: {
-    topicId?: string;
-    difficulty: QuizDifficulty;
-    questionCount: number;
-  }): Promise<QuizSession & { questions: QuizQuestion[] }> => {
+  start: async (params: StartQuizParams): Promise<ActiveQuizSession> => {
     const { data } = await apiClient.post('/quiz/start', params);
     return data;
   },
@@ -64,7 +68,7 @@ export const quizApi = {
   },
 
   /** Get full session with all questions (for review) */
-  getSession: async (sessionId: string): Promise<QuizSession & { questions: QuizQuestion[] }> => {
+  getSession: async (sessionId: string): Promise<ActiveQuizSession> => {
     const { data } = await apiClient.get(`/quiz/${sessionId}`);
     return data;
   },

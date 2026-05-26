@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Box, Typography, IconButton, TextField, Paper, Avatar,
-  List, ListItemButton, ListItemText, Divider, Chip, Tooltip,
+  Typography, IconButton, TextField, Paper,
+  Divider, Chip, Tooltip,
   CircularProgress, Alert, Button, Dialog, DialogTitle,
   DialogContent, DialogActions, FormControl, InputLabel,
-  Select, MenuItem, Stack,
+  Select, MenuItem,
 } from '@mui/material';
 import {
   Send, Add, Chat as ChatIcon, School, Person,
@@ -14,82 +14,68 @@ import { chatApi } from '../../api/chat.api';
 import type { ChatSession, ChatMessage, SourceChunk } from '../../api/chat.api';
 import { topicsApi } from '../../api/topics.api';
 import type { Topic } from '../../api/topics.api';
+import * as S from './ChatPage.styles';
 
-const SIDEBAR_WIDTH = 260;
+interface SourceCitationsProps {
+  sources: SourceChunk[];
+}
+
+interface MessageBubbleProps {
+  msg: ChatMessage;
+  streaming?: boolean;
+}
 
 // ── Source citations ──────────────────────────────────────────────────────────
-function SourceCitations({ sources }: { sources: SourceChunk[] }) {
+function SourceCitations({ sources }: SourceCitationsProps) {
   const [open, setOpen] = useState(false);
   if (!sources.length) return null;
   return (
-    <Box sx={{ mt: 1 }}>
-      <Button
+    <div style={{ marginTop: 8 }}>
+      <S.SourcesToggleButton
         size="small"
         startIcon={open ? <ExpandLess /> : <ExpandMore />}
         onClick={() => setOpen(o => !o)}
-        sx={{ fontSize: 12, color: 'text.secondary', p: 0, minWidth: 0 }}
       >
         {sources.length} source{sources.length > 1 ? 's' : ''}
-      </Button>
+      </S.SourcesToggleButton>
       {open && (
-        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <S.SourcesList>
           {sources.map((s, i) => (
-            <Paper key={i} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+            <S.SourcePaper key={i} variant="outlined">
               <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>
                 {s.documentName}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                 "{s.excerpt}"
               </Typography>
-            </Paper>
+            </S.SourcePaper>
           ))}
-        </Box>
+        </S.SourcesList>
       )}
-    </Box>
+    </div>
   );
 }
 
 // ── Message bubble ────────────────────────────────────────────────────────────
-function MessageBubble({ msg, streaming }: { msg: ChatMessage; streaming?: boolean }) {
+function MessageBubble({ msg, streaming }: MessageBubbleProps) {
   const isUser = msg.role === 'user';
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: isUser ? 'row-reverse' : 'row',
-      gap: 1.5, mb: 2, alignItems: 'flex-start',
-    }}>
-      <Avatar sx={{
-        width: 32, height: 32, flexShrink: 0,
-        bgcolor: isUser ? 'primary.main' : 'secondary.main',
-      }}>
+    <S.MessageWrapper isUser={isUser}>
+      <S.MessageAvatar isUser={isUser}>
         {isUser ? <Person fontSize="small" /> : <School fontSize="small" />}
-      </Avatar>
-      <Box sx={{ maxWidth: '75%' }}>
-        <Paper sx={{
-          px: 2, py: 1.5, borderRadius: 3,
-          borderTopRightRadius: isUser ? 4 : 16,
-          borderTopLeftRadius: isUser ? 16 : 4,
-          bgcolor: isUser ? 'primary.main' : 'background.paper',
-          color: isUser ? 'white' : 'text.primary',
-          boxShadow: 1,
-        }}>
+      </S.MessageAvatar>
+      <S.MessageContentBox>
+        <S.MessagePaper isUser={isUser}>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.65 }}>
             {msg.content}
-            {streaming && (
-              <Box component="span" sx={{
-                display: 'inline-block', width: 8, height: 14,
-                bgcolor: 'secondary.main', ml: 0.5, borderRadius: 0.5,
-                animation: 'blink 1s step-end infinite',
-                '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
-              }} />
-            )}
+            {streaming && <S.BlinkCursor />}
           </Typography>
-        </Paper>
+        </S.MessagePaper>
         {!isUser && msg.sourceChunks?.length ? (
           <SourceCitations sources={msg.sourceChunks} />
         ) : null}
-      </Box>
-    </Box>
+      </S.MessageContentBox>
+    </S.MessageWrapper>
   );
 }
 
@@ -105,7 +91,6 @@ export default function ChatPage() {
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // New session dialog
   const [newDialog, setNewDialog] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -159,7 +144,6 @@ export default function ChatPage() {
     setInput('');
     setError('');
 
-    // Optimistically add user message
     const tempUserMsg: ChatMessage = {
       id: `temp-${Date.now()}`,
       chatSessionId: activeSession.id,
@@ -182,25 +166,18 @@ export default function ChatPage() {
         setStreamingText(fullText);
       },
       () => {
-        // Stream done — replace streaming bubble with real message
         const assistantMsg: ChatMessage = {
           id: `assistant-${Date.now()}`,
           chatSessionId: activeSession.id,
           role: 'assistant',
           content: fullText,
-          sourceChunks: null, // will be loaded on next getMessages call
+          sourceChunks: null,
           createdAt: new Date().toISOString(),
         };
         setMessages(prev => [...prev, assistantMsg]);
         setStreamingText('');
         setStreaming(false);
-
-        // Refresh messages to get proper IDs + source chunks from DB
-        chatApi.getMessages(activeSession.id)
-          .then(setMessages)
-          .catch(() => {});
-
-        // Update session title in sidebar if it was just set
+        chatApi.getMessages(activeSession.id).then(setMessages).catch(() => {});
         chatApi.getSessions().then(setSessions).catch(() => {});
       },
       (err) => {
@@ -221,115 +198,111 @@ export default function ChatPage() {
   // ── Sidebar ───────────────────────────────────────────────────────────────
 
   const sidebar = (
-    <Box sx={{
-      width: SIDEBAR_WIDTH, flexShrink: 0,
-      display: 'flex', flexDirection: 'column',
-      borderRight: '1px solid', borderColor: 'divider',
-      bgcolor: 'background.paper', height: '100%',
-    }}>
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Conversations</Typography>
+    <S.SidebarPanel>
+      <S.SidebarHeader>
+        <S.ConversationsTitle variant="subtitle1">Conversations</S.ConversationsTitle>
         <Tooltip title="New chat">
           <IconButton size="small" color="primary" onClick={() => setNewDialog(true)}>
             <Add />
           </IconButton>
         </Tooltip>
-      </Box>
+      </S.SidebarHeader>
       <Divider />
       {sessions.length === 0 ? (
-        <Box sx={{ p: 2, textAlign: 'center' }}>
+        <S.SidebarEmptyBox>
           <ChatIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
           <Typography variant="body2" color="text.secondary">No chats yet</Typography>
           <Button size="small" startIcon={<Add />} onClick={() => setNewDialog(true)} sx={{ mt: 1 }}>
             Start a chat
           </Button>
-        </Box>
+        </S.SidebarEmptyBox>
       ) : (
-        <List sx={{ flex: 1, overflowY: 'auto', py: 0 }}>
+        <S.SessionList>
           {sessions.map(s => (
-            <ListItemButton
+            <S.SessionButton
               key={s.id}
               selected={activeSession?.id === s.id}
               onClick={() => selectSession(s)}
-              sx={{
-                borderRadius: 0,
-                '&.Mui-selected': { bgcolor: 'primary.50', borderLeft: '3px solid', borderColor: 'primary.main' },
-              }}
             >
-              <ListItemText
-                primary={s.title ?? 'New conversation'}
-                secondary={new Date(s.createdAt).toLocaleDateString()}
-                primaryTypographyProps={{ noWrap: true, variant: 'body2', fontWeight: activeSession?.id === s.id ? 600 : 400 }}
-                secondaryTypographyProps={{ variant: 'caption' }}
-              />
-            </ListItemButton>
+              <Paper
+                component="div"
+                elevation={0}
+                sx={{ background: 'transparent', width: '100%' }}
+              >
+                <Typography
+                  variant="body2"
+                  noWrap
+                  sx={{ fontWeight: activeSession?.id === s.id ? 600 : 400 }}
+                >
+                  {s.title ?? 'New conversation'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {new Date(s.createdAt).toLocaleDateString()}
+                </Typography>
+              </Paper>
+            </S.SessionButton>
           ))}
-        </List>
+        </S.SessionList>
       )}
-    </Box>
+    </S.SidebarPanel>
   );
 
   // ── Main area ─────────────────────────────────────────────────────────────
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      {/* Sidebar — hidden on mobile when toggled off */}
-      <Box sx={{ display: { xs: sidebarOpen ? 'flex' : 'none', md: 'flex' }, flexDirection: 'column' }}>
+    <S.ChatRoot>
+      <S.SidebarContainer isOpen={sidebarOpen}>
         {sidebar}
-      </Box>
+      </S.SidebarContainer>
 
-      {/* Chat area */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <S.ChatArea>
         {/* Top bar */}
-        <Box sx={{
-          px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider',
-          bgcolor: 'background.paper', display: 'flex', alignItems: 'center', gap: 1,
-        }}>
-          <IconButton size="small" onClick={() => setSidebarOpen(o => !o)} sx={{ display: { md: 'none' } }}>
+        <S.TopBar>
+          <S.MenuToggle size="small" onClick={() => setSidebarOpen(o => !o)}>
             <MenuIcon />
-          </IconButton>
+          </S.MenuToggle>
           <School color="primary" />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+          <S.TopBarTitleBox>
+            <S.TopBarTitle variant="subtitle1">
               {activeSession?.title ?? 'AI Learning Companion'}
-            </Typography>
+            </S.TopBarTitle>
             {activeSession?.topicId && (
               <Typography variant="caption" color="text.secondary">
                 Topic session
               </Typography>
             )}
-          </Box>
+          </S.TopBarTitleBox>
           {!activeSession && (
             <Button variant="contained" size="small" startIcon={<Add />} onClick={() => setNewDialog(true)}>
               New chat
             </Button>
           )}
-        </Box>
+        </S.TopBar>
 
         {/* Messages */}
-        <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, md: 3 } }}>
+        <S.MessagesArea>
           {!activeSession ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 2 }}>
+            <S.EmptyStateBox>
               <ChatIcon sx={{ fontSize: 64, color: 'text.disabled' }} />
               <Typography variant="h6" color="text.secondary">Select a conversation or start a new one</Typography>
               <Button variant="contained" startIcon={<Add />} onClick={() => setNewDialog(true)}>
                 New chat
               </Button>
-            </Box>
+            </S.EmptyStateBox>
           ) : loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', pt: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64 }}>
               <CircularProgress />
-            </Box>
+            </div>
           ) : (
             <>
               {messages.length === 0 && !streaming && (
-                <Box sx={{ textAlign: 'center', py: 6 }}>
+                <div style={{ textAlign: 'center', paddingTop: 48, paddingBottom: 48 }}>
                   <School sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                   <Typography color="text.secondary">
                     Ask me anything about your uploaded materials
                   </Typography>
                   {topics.length > 0 && (
-                    <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2, flexWrap: 'wrap', gap: 1 }}>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' }}>
                       {['Summarise this topic', 'What are the key concepts?', 'Quiz me on this'].map(s => (
                         <Chip
                           key={s} label={s} variant="outlined" size="small"
@@ -337,9 +310,9 @@ export default function ChatPage() {
                           sx={{ cursor: 'pointer' }}
                         />
                       ))}
-                    </Stack>
+                    </div>
                   )}
-                </Box>
+                </div>
               )}
               {messages.map(msg => (
                 <MessageBubble key={msg.id} msg={msg} />
@@ -354,12 +327,12 @@ export default function ChatPage() {
               <div ref={bottomRef} />
             </>
           )}
-        </Box>
+        </S.MessagesArea>
 
         {/* Input */}
         {activeSession && (
-          <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+          <S.InputArea>
+            <S.InputRow>
               <TextField
                 inputRef={inputRef}
                 fullWidth multiline maxRows={5}
@@ -370,18 +343,16 @@ export default function ChatPage() {
                 disabled={streaming}
                 size="small"
               />
-              <IconButton
-                color="primary"
+              <S.SendButton
                 onClick={handleSend}
                 disabled={!input.trim() || streaming}
-                sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, '&:disabled': { bgcolor: 'action.disabledBackground' } }}
               >
                 {streaming ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <Send />}
-              </IconButton>
-            </Box>
-          </Box>
+              </S.SendButton>
+            </S.InputRow>
+          </S.InputArea>
         )}
-      </Box>
+      </S.ChatArea>
 
       {/* New session dialog */}
       <Dialog open={newDialog} onClose={() => setNewDialog(false)} maxWidth="xs" fullWidth>
@@ -411,6 +382,6 @@ export default function ChatPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </S.ChatRoot>
   );
 }

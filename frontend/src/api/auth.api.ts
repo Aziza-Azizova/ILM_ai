@@ -1,15 +1,27 @@
 import { apiClient } from './client';
+import type { AuthUser } from '../types/auth.types';
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
 
 export interface AuthResponse {
   accessToken: string;
-  user: { id: string; email: string; name: string; plan: string };
+  user: AuthUser;
 }
 
 export const authApi = {
-  register: (data: { email: string; password: string; name?: string }) =>
+  register: (data: RegisterData) =>
     apiClient.post<AuthResponse>('/auth/register', data).then((r) => r.data),
 
-  login: (data: { email: string; password: string }) =>
+  login: (data: LoginData) =>
     apiClient.post<AuthResponse>('/auth/login', data).then((r) => r.data),
 
   googleLogin: () => {

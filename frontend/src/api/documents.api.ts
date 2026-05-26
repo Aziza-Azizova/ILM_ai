@@ -2,6 +2,12 @@ import { apiClient } from './client';
 
 export type DocumentStatus = 'pending' | 'processing' | 'ready' | 'failed';
 
+export interface UploadTextParams {
+  title: string;
+  content: string;
+  topicId?: string;
+}
+
 export interface Document {
   id: string;
   originalName: string;
@@ -27,7 +33,7 @@ export const documentsApi = {
   },
 
   /** Upload pasted text */
-  uploadText: (params: { title: string; content: string; topicId?: string }): Promise<Document> =>
+  uploadText: (params: UploadTextParams): Promise<Document> =>
     apiClient.post<Document>('/documents/text', params).then(r => r.data),
 
   /** List documents, optionally filtered by topic */

@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box, Typography, Grid, Card, CardContent, CardActionArea,
-  Button, Skeleton, Alert,
+  Grid, Card, Typography, Skeleton, Alert,
 } from '@mui/material';
 import {
-  FolderOpen, Chat, Quiz, TrendingUp, Whatshot,
-  EmojiEvents, Add, ArrowForward,
+  FolderOpen, Chat, Quiz, TrendingUp, ArrowForward,
 } from '@mui/icons-material';
 import { usersApi } from '../../api/users.api';
 import type { UserStats, UserProfile } from '../../api/users.api';
 import { useAuthStore } from '../../store/auth.store';
 import GoalDialog from './GoalDialog';
+import * as S from './DashboardPage.styles';
 
 interface StatCardProps {
   label: string;
@@ -23,27 +22,32 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, color, onClick }: StatCardProps) {
   return (
-    <Card sx={{ height: '100%' }}>
-      <CardActionArea onClick={onClick} sx={{ height: '100%', p: 0.5 }} disabled={!onClick}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box sx={{
-              width: 44, height: 44, borderRadius: 2,
-              bgcolor: `${color}20`, display: 'flex',
-              alignItems: 'center', justifyContent: 'center', color,
-            }}>
-              {icon}
-            </Box>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>{value}</Typography>
-              <Typography variant="caption" color="text.secondary">{label}</Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </CardActionArea>
-    </Card>
+    <S.StatCardRoot>
+      <S.StatCardAction onClick={onClick} disabled={!onClick}>
+        <S.StatContentBox>
+          <S.StatIconBox accentColor={color}>{icon}</S.StatIconBox>
+          <div>
+            <S.StatValue variant="h5">{value}</S.StatValue>
+            <Typography variant="caption" color="text.secondary">{label}</Typography>
+          </div>
+        </S.StatContentBox>
+      </S.StatCardAction>
+    </S.StatCardRoot>
   );
 }
+
+interface QuickAction {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  path: string;
+}
+
+const quickActions: QuickAction[] = [
+  { icon: <Chat color="primary" />, title: 'Upload material', desc: 'Add a PDF, Word doc, or paste text', path: '/topics' },
+  { icon: <Chat color="secondary" />, title: 'Ask a question', desc: 'Chat with your learning companion', path: '/chat' },
+  { icon: <Quiz sx={{ color: '#FF7043' }} />, title: 'Take a quiz', desc: 'Test your knowledge', path: '/quiz' },
+];
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -61,53 +65,50 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const [today] = useState(() => Date.now());
   const daysUntilGoal = profile?.goalDate
-    ? Math.max(0, Math.ceil((new Date(profile.goalDate).getTime() - Date.now()) / 86400000))
+    ? Math.max(0, Math.ceil((new Date(profile.goalDate).getTime() - today) / 86400000))
     : null;
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 960, mx: 'auto', width: '100%' }}>
+    <S.PageRoot>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
+      <S.PageHeader>
         <Typography variant="h4" sx={{ fontWeight: 700 }}>
           Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋
         </Typography>
         <Typography color="text.secondary" sx={{ mt: 0.5 }}>
           Here's what's happening with your learning
         </Typography>
-      </Box>
+      </S.PageHeader>
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
       {/* Goal banner */}
-      <Card sx={{ mb: 3, background: 'linear-gradient(135deg, #5C6BC0 0%, #26A69A 100%)', color: 'white' }}>
-        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-          <EmojiEvents sx={{ fontSize: 36 }} />
-          <Box sx={{ flex: 1 }}>
+      <S.GoalCard>
+        <S.GoalContent>
+          <S.GoalIcon />
+          <S.GoalTextBox>
             {profile?.goalText ? (
               <>
                 <Typography sx={{ fontWeight: 600 }}>{profile.goalText}</Typography>
                 {daysUntilGoal !== null && (
-                  <Typography variant="body2" sx={{ opacity: 0.85 }}>
+                  <S.GoalCountdown variant="body2">
                     {daysUntilGoal === 0 ? '🎯 Goal day is today!' : `${daysUntilGoal} days to go`}
-                  </Typography>
+                  </S.GoalCountdown>
                 )}
               </>
             ) : (
               <Typography sx={{ fontWeight: 600 }}>No goal set yet — what are you working towards?</Typography>
             )}
-          </Box>
-          <Button
-            variant="outlined" size="small"
-            sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}
-            onClick={() => setGoalOpen(true)}
-          >
+          </S.GoalTextBox>
+          <S.GoalButton variant="outlined" size="small" onClick={() => setGoalOpen(true)}>
             {profile?.goalText ? 'Edit goal' : 'Set goal'}
-          </Button>
-        </CardContent>
-      </Card>
+          </S.GoalButton>
+        </S.GoalContent>
+      </S.GoalCard>
 
-      {/* Stats grid — MUI v9: use size prop instead of item+xs/md */}
+      {/* Stats grid */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
         {loading
           ? [1, 2, 3, 4].map((i) => (
@@ -139,55 +140,52 @@ export default function DashboardPage() {
 
       {/* Streak */}
       {!loading && (
-        <Card sx={{ mb: 4 }}>
-          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Whatshot sx={{ color: '#FF7043', fontSize: 32 }} />
-            <Box>
+        <S.StreakCard>
+          <S.StreakContent>
+            <S.StreakIcon />
+            <div>
               <Typography sx={{ fontWeight: 700 }}>{stats?.streak ?? 0}-day streak</Typography>
               <Typography variant="body2" color="text.secondary">
                 {stats?.streak
                   ? 'Keep it up! Come back tomorrow to continue.'
                   : 'Complete a quiz today to start your streak.'}
               </Typography>
-            </Box>
-          </CardContent>
-        </Card>
+            </div>
+          </S.StreakContent>
+        </S.StreakCard>
       )}
 
       {/* Quick actions */}
-      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Quick actions</Typography>
+      <S.QuickActionsTitle variant="h6">Quick actions</S.QuickActionsTitle>
       <Grid container spacing={2}>
-        {[
-          { icon: <Add color="primary" />, title: 'Upload material', desc: 'Add a PDF, Word doc, or paste text', path: '/topics' },
-          { icon: <Chat color="secondary" />, title: 'Ask a question', desc: 'Chat with your learning companion', path: '/chat' },
-          { icon: <Quiz sx={{ color: '#FF7043' }} />, title: 'Take a quiz', desc: 'Test your knowledge', path: '/quiz' },
-        ].map((action) => (
+        {quickActions.map((action) => (
           <Grid key={action.path} size={{ xs: 12, sm: 4 }}>
             <Card>
-              <CardActionArea onClick={() => navigate(action.path)} sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <S.QuickActionArea onClick={() => navigate(action.path)}>
+                <S.QuickActionHeader>
+                  <S.QuickActionTitleBox>
                     {action.icon}
-                    <Typography sx={{ fontWeight: 600 }}>{action.title}</Typography>
-                  </Box>
+                    <S.QuickActionTitle>{action.title}</S.QuickActionTitle>
+                  </S.QuickActionTitleBox>
                   <ArrowForward fontSize="small" color="action" />
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                </S.QuickActionHeader>
+                <S.QuickActionDesc variant="body2" color="text.secondary">
                   {action.desc}
-                </Typography>
-              </CardActionArea>
+                </S.QuickActionDesc>
+              </S.QuickActionArea>
             </Card>
           </Grid>
         ))}
       </Grid>
 
       <GoalDialog
+        key={String(goalOpen)}
         open={goalOpen}
         currentGoal={profile?.goalText ?? ''}
         currentDate={profile?.goalDate ?? ''}
         onClose={() => setGoalOpen(false)}
         onSaved={(p) => { setProfile(p); setGoalOpen(false); }}
       />
-    </Box>
+    </S.PageRoot>
   );
 }

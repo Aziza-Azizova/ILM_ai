@@ -75,6 +75,32 @@ Frontend `.env`:
 VITE_API_URL=http://localhost:3001/api
 ```
 
+## TypeScript Conventions
+
+### Typing rules
+- Never use inline anonymous object types. Every object shape must have a named `interface` or `type`.
+  ```ts
+  // Bad
+  function login(data: { email: string; password: string }) {}
+  const [form, setForm] = useState({ name: '', description: '' });
+
+  // Good
+  interface LoginData { email: string; password: string }
+  interface TopicForm { name: string; description: string }
+  ```
+- Never use `as` type assertions. Use an explicit type annotation on the variable or function parameter instead.
+  ```ts
+  // Bad
+  someArray.map(item as MyType)
+
+  // Good
+  const items: MyType[] = [...];
+  ```
+- Define types in the same file where they are used. Only extract to a separate file when the type is shared across multiple files.
+  - Shared types live in `frontend/src/types/` (e.g. `auth.types.ts` for `AuthUser` used by both `auth.api.ts` and `auth.store.ts`).
+- API request payload types (`CreateTopicData`, `LoginData`, etc.) are defined and exported from their corresponding `api/*.ts` file.
+- MUI v9: `display`, `justifyContent`, and other CSS props must be inside `sx`, not as direct JSX props. Use `slotProps` instead of deprecated `*TypographyProps`.
+
 ## Key Conventions
 
 - Global API prefix: `/api`. All backend routes are under `/api/...`.

@@ -1,21 +1,28 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box, Typography, Button, Card, CardContent, IconButton,
-  Chip, Alert, Stack, Divider, CircularProgress, Tooltip,
+  Box, Typography, Button, Card, IconButton,
+  Chip, Alert, Stack, CircularProgress, Tooltip,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  LinearProgress,
 } from '@mui/material';
 import {
   ArrowBack, Upload, Delete, TextFields, InsertDriveFile,
   CheckCircle, HourglassEmpty, Error as ErrorIcon, Refresh,
 } from '@mui/icons-material';
+import axios from 'axios';
 import { topicsApi } from '../../api/topics.api';
 import type { Topic } from '../../api/topics.api';
 import { documentsApi } from '../../api/documents.api';
 import type { Document, DocumentStatus } from '../../api/documents.api';
+import * as S from './TopicDetailPage.styles';
 
-const STATUS_META: Record<DocumentStatus, { label: string; color: 'default' | 'warning' | 'success' | 'error'; icon: React.ReactNode }> = {
+interface StatusMeta {
+  label: string;
+  color: 'default' | 'warning' | 'success' | 'error';
+  icon: React.ReactNode;
+}
+
+const STATUS_META: Record<DocumentStatus, StatusMeta> = {
   pending:    { label: 'Pending',    color: 'default',  icon: <HourglassEmpty fontSize="small" /> },
   processing: { label: 'Processing', color: 'warning',  icon: <CircularProgress size={14} /> },
   ready:      { label: 'Ready',      color: 'success',  icon: <CheckCircle fontSize="small" /> },
@@ -31,25 +38,27 @@ export default function TopicDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
-
-  // Text paste dialog
   const [textDialog, setTextDialog] = useState(false);
   const [textTitle, setTextTitle] = useState('');
   const [textContent, setTextContent] = useState('');
   const [savingText, setSavingText] = useState(false);
-
-  // Delete confirmation
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Poll for processing status every 3 seconds while any doc is pending/processing
+  const loadDocs = useCallback(async () => {
+    if (!id) return;
+    try {
+      setDocs(await documentsApi.getAll(id));
+    } catch { /* silent refresh */ }
+  }, [id]);
+
   const hasPending = docs.some(d => d.status === 'pending' || d.status === 'processing');
   useEffect(() => {
     if (!hasPending) return;
-    const timer = setInterval(() => loadDocs(), 3000);
+    const timer = setInterval(loadDocs, 3000);
     return () => clearInterval(timer);
-  }, [hasPending]);
+  }, [hasPending, loadDocs]);
 
   useEffect(() => {
     if (!id) return;
@@ -62,24 +71,21 @@ export default function TopicDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const loadDocs = async () => {
-    if (!id) return;
-    try {
-      setDocs(await documentsApi.getAll(id));
-    } catch { /* silent refresh */ }
-  };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !id) return;
-    e.target.value = ''; // reset so same file can be re-uploaded
+    e.target.value = '';
     setUploading(true);
     setError('');
     try {
       const doc = await documentsApi.uploadFile(file, id);
       setDocs(prev => [doc, ...prev]);
-    } catch (err: any) {
-      setError(err.response?.data?.message ?? 'Upload failed');
+    } catch (err) {
+      setError(
+        axios.isAxiosError(err)
+          ? (err.response?.data?.message ?? 'Upload failed')
+          : 'Upload failed',
+      );
     } finally {
       setUploading(false);
     }
@@ -95,8 +101,12 @@ export default function TopicDetailPage() {
       setTextDialog(false);
       setTextTitle('');
       setTextContent('');
-    } catch (err: any) {
-      setError(err.response?.data?.message ?? 'Failed to save text');
+    } catch (err) {
+      setError(
+        axios.isAxiosError(err)
+          ? (err.response?.data?.message ?? 'Failed to save text')
+          : 'Failed to save text',
+      );
     } finally {
       setSavingText(false);
     }
@@ -131,17 +141,13 @@ export default function TopicDetailPage() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 800, mx: 'auto', width: '100%' }}>
+    <S.PageRoot>
       {/* Header */}
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => navigate('/topics')}
-        sx={{ mb: 2 }}
-      >
+      <Button startIcon={<ArrowBack />} onClick={() => navigate('/topics')} sx={{ mb: 2 }}>
         My Topics
       </Button>
 
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+      <S.PageHeader>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 700 }}>{topic.name}</Typography>
           {topic.description && (
@@ -149,11 +155,7 @@ export default function TopicDetailPage() {
           )}
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<TextFields />}
-            onClick={() => setTextDialog(true)}
-          >
+          <Button variant="outlined" startIcon={<TextFields />} onClick={() => setTextDialog(true)}>
             Paste text
           </Button>
           <Box>
@@ -165,9 +167,9 @@ export default function TopicDetailPage() {
             >
               {uploading ? 'Uploading…' : 'Upload file'}
             </Button>
-            <Typography variant="caption" color="text.disabled" display="block" sx={{ mt: 0.5, textAlign: 'center' }}>
+            <S.UploadCaption variant="caption" color="text.disabled">
               PDF · DOCX · TXT · max 50 MB
-            </Typography>
+            </S.UploadCaption>
             <input
               ref={fileInputRef}
               type="file"
@@ -177,27 +179,27 @@ export default function TopicDetailPage() {
             />
           </Box>
         </Stack>
-      </Box>
+      </S.PageHeader>
 
       {error && <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>{error}</Alert>}
 
       {/* Documents list */}
       {docs.length === 0 ? (
-        <Card sx={{ textAlign: 'center', py: 8 }}>
+        <S.EmptyStateCard>
           <InsertDriveFile sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
           <Typography variant="h6" color="text.secondary" gutterBottom>No documents yet</Typography>
           <Typography color="text.disabled" sx={{ mb: 3 }}>
             Supported formats: PDF, Word (.docx), plain text (.txt) — max 50 MB
           </Typography>
-          <Stack direction="row" spacing={2} justifyContent="center">
+          <S.EmptyActionsRow direction="row" spacing={2}>
             <Button variant="contained" startIcon={<Upload />} onClick={() => fileInputRef.current?.click()}>
               Upload file
             </Button>
             <Button variant="outlined" startIcon={<TextFields />} onClick={() => setTextDialog(true)}>
               Paste text
             </Button>
-          </Stack>
-        </Card>
+          </S.EmptyActionsRow>
+        </S.EmptyStateCard>
       ) : (
         <Stack spacing={2}>
           {hasPending && (
@@ -209,12 +211,12 @@ export default function TopicDetailPage() {
             const meta = STATUS_META[doc.status];
             return (
               <Card key={doc.id}>
-                <CardContent sx={{ pb: '12px !important' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <S.DocCardContent>
+                  <S.DocMainRow>
                     <InsertDriveFile color="action" />
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <S.DocInfoBox>
                       <Typography sx={{ fontWeight: 600 }} noWrap>{doc.originalName}</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
+                      <S.DocChipRow>
                         <Chip
                           icon={meta.icon as React.ReactElement}
                           label={meta.label}
@@ -234,12 +236,10 @@ export default function TopicDetailPage() {
                         <Typography variant="caption" color="text.disabled">
                           {new Date(doc.createdAt).toLocaleDateString()}
                         </Typography>
-                      </Box>
-                      {doc.status === 'processing' && (
-                        <LinearProgress sx={{ mt: 1, borderRadius: 1 }} />
-                      )}
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      </S.DocChipRow>
+                      {doc.status === 'processing' && <S.StyledLinearProgress />}
+                    </S.DocInfoBox>
+                    <S.DocActionsBox>
                       {doc.status === 'failed' && (
                         <Tooltip title="Retry processing">
                           <IconButton size="small" onClick={loadDocs}>
@@ -252,9 +252,9 @@ export default function TopicDetailPage() {
                           <Delete fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                    </Box>
-                  </Box>
-                </CardContent>
+                    </S.DocActionsBox>
+                  </S.DocMainRow>
+                </S.DocCardContent>
               </Card>
             );
           })}
@@ -264,12 +264,11 @@ export default function TopicDetailPage() {
       {/* Paste text dialog */}
       <Dialog open={textDialog} onClose={() => setTextDialog(false)} maxWidth="md" fullWidth>
         <DialogTitle>Paste text</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <TextField
+        <S.StyledDialogContent>
+          <S.TextTitleField
             fullWidth autoFocus label="Title" placeholder='e.g. "Chapter 3 notes"'
             value={textTitle}
             onChange={e => setTextTitle(e.target.value)}
-            sx={{ mb: 2 }}
           />
           <TextField
             fullWidth multiline rows={10}
@@ -278,8 +277,8 @@ export default function TopicDetailPage() {
             value={textContent}
             onChange={e => setTextContent(e.target.value)}
           />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        </S.StyledDialogContent>
+        <S.StyledDialogActions>
           <Button onClick={() => setTextDialog(false)}>Cancel</Button>
           <Button
             variant="contained"
@@ -288,7 +287,7 @@ export default function TopicDetailPage() {
           >
             {savingText ? <CircularProgress size={20} /> : 'Save & process'}
           </Button>
-        </DialogActions>
+        </S.StyledDialogActions>
       </Dialog>
 
       {/* Delete confirmation */}
@@ -304,6 +303,6 @@ export default function TopicDetailPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </S.PageRoot>
   );
 }

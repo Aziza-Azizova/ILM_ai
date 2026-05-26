@@ -19,6 +19,16 @@ export interface UserProfile {
   streak: number;
 }
 
+export interface UpdateGoalData {
+  goalText?: string;
+  goalDate?: string;
+}
+
+export interface UpdateProfileData {
+  name?: string;
+  reminderTime?: string;
+}
+
 export const usersApi = {
   getProfile: () =>
     apiClient.get<UserProfile>('/users/me').then((r) => r.data),
@@ -26,9 +36,9 @@ export const usersApi = {
   getStats: () =>
     apiClient.get<UserStats>('/users/me/stats').then((r) => r.data),
 
-  updateGoal: (data: { goalText?: string; goalDate?: string }) =>
+  updateGoal: (data: UpdateGoalData) =>
     apiClient.patch<UserProfile>('/users/me/goal', data).then((r) => r.data),
 
-  updateProfile: (data: { name?: string; reminderTime?: string }) =>
+  updateProfile: (data: UpdateProfileData) =>
     apiClient.patch<UserProfile>('/users/me', data).then((r) => r.data),
 };

@@ -7,14 +7,24 @@ export interface Topic {
   createdAt: string;
 }
 
+export interface CreateTopicData {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateTopicData {
+  name?: string;
+  description?: string;
+}
+
 export const topicsApi = {
   getAll: () =>
     apiClient.get<Topic[]>('/topics').then((r) => r.data),
 
-  create: (data: { name: string; description?: string }) =>
+  create: (data: CreateTopicData) =>
     apiClient.post<Topic>('/topics', data).then((r) => r.data),
 
-  update: (id: string, data: { name?: string; description?: string }) =>
+  update: (id: string, data: UpdateTopicData) =>
     apiClient.patch<Topic>(`/topics/${id}`, data).then((r) => r.data),
 
   remove: (id: string) =>
