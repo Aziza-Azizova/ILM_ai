@@ -1,5 +1,8 @@
 # IlmAI
 
+**Participant:** Aziza Azizova  
+**Program:** AI Mentorship Program — 4-week capstone
+
 An AI-powered learning companion. Upload documents (PDF, DOCX, TXT), ask questions via RAG-powered streaming chat, and take AI-generated quizzes to test your knowledge.
 
 ## Tech Stack
