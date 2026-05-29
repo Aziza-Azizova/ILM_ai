@@ -2,7 +2,9 @@ import { styled } from '@mui/material/styles';
 import { DialogContent, DialogActions, TextField } from '@mui/material';
 
 export const StyledDialogContent = styled(DialogContent)({
-  paddingTop: 16,
+  '&.MuiDialogContent-root': {
+    paddingTop: 16,
+  },
 });
 
 export const GoalTextField = styled(TextField)({

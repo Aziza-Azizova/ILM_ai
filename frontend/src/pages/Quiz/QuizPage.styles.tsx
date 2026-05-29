@@ -9,7 +9,7 @@ interface PageRootProps {
 
 export const PageRoot = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'pageMaxWidth',
-})<PageRootProps>(({ theme, pageMaxWidth = 640 }) => ({
+})<PageRootProps>(({ theme, pageMaxWidth = 1000 }) => ({
   padding: 16,
   maxWidth: pageMaxWidth,
   marginLeft: 'auto',

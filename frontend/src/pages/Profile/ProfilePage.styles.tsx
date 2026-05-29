@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Typography, Avatar, Chip, Divider, TextField } 
 
 export const PageRoot = styled(Box)(({ theme }) => ({
   padding: 16,
-  maxWidth: 640,
+  maxWidth: 1000,
   marginLeft: 'auto',
   marginRight: 'auto',
   width: '100%',

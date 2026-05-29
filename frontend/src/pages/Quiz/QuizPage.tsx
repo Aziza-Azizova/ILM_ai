@@ -187,7 +187,7 @@ export default function QuizPage() {
 
   if (step === 'setup') {
     return (
-      <S.PageRoot pageMaxWidth={640}>
+      <S.PageRoot pageMaxWidth={1000}>
         <S.SetupHeader>
           <div>
             <S.SetupTitle variant="h4">Quiz & Practice</S.SetupTitle>
@@ -394,7 +394,7 @@ export default function QuizPage() {
     const scoreColor: ScoreColor = pct >= 80 ? 'success' : pct >= 50 ? 'warning' : 'error';
 
     return (
-      <S.PageRoot pageMaxWidth={640}>
+      <S.PageRoot pageMaxWidth={1000}>
         <S.ResultsTitle variant="h4">Quiz Complete!</S.ResultsTitle>
         <S.ResultsSubtitle color="text.secondary">Here's how you did</S.ResultsSubtitle>
 

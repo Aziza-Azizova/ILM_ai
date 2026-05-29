@@ -3,7 +3,7 @@ import { Box, Typography, DialogContent, DialogActions } from '@mui/material';
 
 export const PageRoot = styled(Box)(({ theme }) => ({
   padding: 16,
-  maxWidth: 960,
+  maxWidth: 1000,
   marginLeft: 'auto',
   marginRight: 'auto',
   width: '100%',
