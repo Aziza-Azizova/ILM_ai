@@ -117,7 +117,7 @@ export class AiService {
     const systemPrompt = COMPANION_SYSTEM_PROMPT.replace(
       '{context}',
       params.context,
-    ).replace('{history}', ''); // history is in messages array
+    );
 
     const messages: Anthropic.MessageParam[] = [
       ...params.history.map((m) => ({ role: m.role, content: m.content })),

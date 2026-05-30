@@ -38,46 +38,45 @@ External: Stripe webhooks · Telegram Bot API
 Goal: Auth working, file upload pipeline running, basic RAG chat answering questions from uploaded docs.
 
 ### Day 1–2: Project Setup & Database
-- [ ] Initialize NestJS project (`backend/`)
-- [ ] Initialize React project (`frontend/`)
-- [ ] Set up Docker Compose (postgres + pgvector + backend + frontend)
-- [ ] Design and run database migrations (see schema below)
-- [ ] Configure `.env` files and environment variable structure
+- [x] Initialize NestJS project (`backend/`)
+- [x] Initialize React project (`frontend/`)
+- [x] Set up Docker Compose (postgres + pgvector + backend + frontend)
+- [x] Design and run database migrations (see schema below)
+- [x] Configure `.env` files and environment variable structure
 
 ### Day 3: Authentication
-- [ ] JWT auth module in NestJS (register, login, refresh token)
-- [ ] Google OAuth strategy (Passport.js)
-- [ ] Auth guard applied to all protected routes
-- [ ] Frontend: login page, register page, token storage (httpOnly cookie or localStorage)
+- [x] JWT auth module in NestJS (register, login, refresh token)
+- [x] Google OAuth strategy (Passport.js)
+- [x] Auth guard applied to all protected routes
+- [x] Frontend: login page, register page, token storage (httpOnly cookie or localStorage)
 
 ### Day 4: File Upload & Processing Pipeline
-- [ ] File upload endpoint (PDF, DOCX, TXT, plain text paste)
-- [ ] Text extraction service (pdf-parse for PDF, mammoth for DOCX)
-- [ ] Chunking service (split text into ~500-token chunks with overlap)
-- [ ] Embedding service (OpenAI text-embedding-3-small API call)
-- [ ] Store chunks + embeddings in pgvector (`document_chunks` table)
+- [x] File upload endpoint (PDF, DOCX, TXT, plain text paste)
+- [x] Text extraction service (pdf-parse for PDF, mammoth for DOCX)
+- [x] Chunking service (split text into ~500-token chunks with overlap)
+- [x] Embedding service (OpenAI text-embedding-3-small API call)
+- [x] Store chunks + embeddings in pgvector (`document_chunks` table)
 - [ ] Frontend: file upload UI with drag-and-drop
 
 ### Day 5–6: RAG Chat
-- [ ] Semantic search endpoint: embed query → cosine similarity search on pgvector
-- [ ] Chat endpoint: retrieve top-k chunks → build Claude prompt with sources → stream response
-- [ ] System prompt: warm/Socratic personality, grounded-only answers, cite source sections
-- [ ] Language detection: respond in Uzbek/Russian/English based on user input
-- [ ] Save chat history to DB per session
-- [ ] Frontend: chat interface with message bubbles and source citations
+- [x] Semantic search endpoint: embed query → cosine similarity search on pgvector
+- [x] Chat endpoint: retrieve top-k chunks → build Claude prompt with sources → stream response
+- [x] System prompt: warm/Socratic personality, grounded-only answers, cite source sections
+- [x] Language detection: respond in Uzbek/Russian/English based on user input
+- [x] Save chat history to DB per session
+- [x] Frontend: chat interface with message bubbles and source citations
 
 ### Day 6 (also): Uzbek Language Quality Test
-- [ ] Write a system prompt variant explicitly instructing Claude to respond in the user's language
-- [ ] Upload a short Uzbek-language text (e.g. a paragraph from an Uzbek article or textbook)
-- [ ] Ask 5 questions in Uzbek and evaluate: fluency, correctness, whether it stays in Uzbek
+- [x] Write a system prompt variant explicitly instructing Claude to respond in the user's language
+- [ ] Upload a short Uzbek-language text and test with 5 questions in Uzbek
 - [ ] Ask the same 5 questions in Russian and English to compare
-- [ ] If Uzbek quality is poor, adjust system prompt (add explicit language instruction, few-shot examples in Uzbek, or instruct Claude to transliterate if needed)
-- [ ] Document the winning system prompt in `backend/src/ai/prompts/companion.prompt.ts` with a comment explaining what was tested
+- [x] Adjust system prompt — added identity rule, stronger language override, document language isolation
+- [x] Document the winning system prompt in `backend/src/modules/ai/prompts/companion.prompt.ts`
 
 ### Day 7: Topics/Collections + Profile
-- [ ] Topic CRUD (user-named collections, attach materials to topics)
-- [ ] Profile page: basic stats (sessions, topics, uploads)
-- [ ] Goal setting: text goal + target date stored on user profile
+- [x] Topic CRUD (user-named collections, attach materials to topics)
+- [x] Profile page: basic stats (sessions, topics, uploads)
+- [x] Goal setting: text goal + target date stored on user profile
 
 ---
 
@@ -86,12 +85,12 @@ Goal: Auth working, file upload pipeline running, basic RAG chat answering quest
 Goal: Quiz mode live, learning plan agent generating plans, Telegram bot sending reminders.
 
 ### Day 8–9: Quiz & Practice Mode
-- [ ] Quiz generation endpoint: select topic + difficulty → Claude generates questions from chunks
-- [ ] Question types: multiple choice, short answer, open-ended explanation
-- [ ] Answer evaluation endpoint: Claude evaluates response + cites source section
-- [ ] Save quiz session (questions, answers, scores) to DB
-- [ ] Frontend: quiz UI (question display, answer input, feedback panel)
-- [ ] Difficulty levels: gentle / solid / expert
+- [x] Quiz generation endpoint: select topic + difficulty → Claude generates questions from chunks
+- [x] Question types: multiple choice, short answer, open-ended explanation
+- [x] Answer evaluation endpoint: Claude evaluates response + cites source section
+- [x] Save quiz session (questions, answers, scores) to DB
+- [x] Frontend: quiz UI (question display, answer input, feedback panel)
+- [x] Difficulty levels: gentle / solid / expert
 
 ### Day 10–11: Learning Plan Agent
 - [ ] Implement agent tools as NestJS services:
@@ -115,7 +114,7 @@ Goal: Quiz mode live, learning plan agent generating plans, Telegram bot sending
 - [ ] `/start` command: link Telegram account to Ilm AI account (via token)
 - [ ] Daily reminder: cron job sends message at user-configured time
 - [ ] `/quiz` command: runs 5-question quiz on user's most recent topic
-- [ ] Streak tracking: consecutive days with at least one session
+- [x] Streak tracking: consecutive days with at least one session
 
 ---
 
@@ -133,13 +132,13 @@ Goal: Payment flow in test mode, full UI polish, mobile-responsive, knowledge ga
 
 ### Day 17–18: UI Polish & Mobile
 - [ ] Responsive layout using MUI Grid/Breakpoints (test on 375px mobile)
-- [ ] Dashboard: stats cards (sessions, topics, streak, knowledge score trend)
-- [ ] Navigation: sidebar (desktop) / bottom nav (mobile)
+- [x] Dashboard: stats cards (sessions, topics, streak, knowledge score trend)
+- [x] Navigation: sidebar (desktop) / bottom nav (mobile)
 - [ ] Loading states, error boundaries, empty states for all pages
 - [ ] Toast notifications for key actions
 
 ### Day 19–20: Monitoring & Logging
-- [ ] LLM call logging: log every Claude/OpenAI request — prompt, response, latency, token count — to `llm_logs` table
+- [x] LLM call logging: log every Claude/OpenAI request — prompt, response, latency, token count — to `llm_logs` table
 - [ ] Sentry integration (backend error tracking)
 - [ ] Basic usage metrics endpoint (DAU, quiz completions, upload counts)
 
@@ -163,7 +162,7 @@ Goal: Deployed to production, CI/CD running, evaluation complete, deliverables r
 - [ ] Test production deployment end-to-end
 
 ### Day 24: CI/CD
-- [ ] GitHub repository setup (push code)
+- [x] GitHub repository setup (push code)
 - [ ] GitHub Actions: run lint + tests on every push
 - [ ] GitHub Actions: auto-deploy to production on merge to `main`
 
@@ -174,7 +173,7 @@ Goal: Deployed to production, CI/CD running, evaluation complete, deliverables r
 - [ ] Document results in `evaluation-report.md`
 
 ### Day 27–28: Final Deliverables
-- [ ] Write `README.md` (setup instructions, architecture diagram, API docs)
+- [x] Write `README.md` (setup instructions, architecture diagram, API docs)
 - [ ] Record 5-minute demo video (sign up → upload → chat → quiz → plan → payment)
 - [ ] Write 1-page reflection document
 - [ ] Get 3+ real people to test the app and collect feedback
@@ -218,9 +217,9 @@ llm_logs (id, user_id, provider, model, prompt_tokens, completion_tokens, latenc
 
 ## Key Questions to Decide Before Coding
 
-- [ ] Will you use NestJS built-in queues (BullMQ) for async document processing, or process synchronously? (Recommend BullMQ — uploads can take time)
-- [ ] Will chat streaming use SSE (Server-Sent Events) or WebSockets? (Recommend SSE — simpler with NestJS)
-- [ ] Monorepo (single git repo with `/backend` and `/frontend`) or two separate repos? (Recommend monorepo)
+- [x] Will you use NestJS built-in queues (BullMQ) for async document processing, or process synchronously? → **Synchronous for MVP**
+- [x] Will chat streaming use SSE (Server-Sent Events) or WebSockets? → **SSE**
+- [x] Monorepo (single git repo with `/backend` and `/frontend`) or two separate repos? → **Monorepo**
 
 ---
 
